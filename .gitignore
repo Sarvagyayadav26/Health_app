@@ -1,0 +1,90 @@
+# =========================
+# OS / Editor
+# =========================
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+*.code-workspace
+
+# =========================
+# Python / Backend
+# =========================
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+
+# Virtual environments
+venv/
+.venv/
+env/
+ENV/
+
+# Secrets / Env
+.env
+*.env
+.env.*
+*.key
+*.pem
+*.token
+*.credentials
+
+# Logs / cache
+logs/
+*.log
+.cache/
+
+# Databases (DO NOT COMMIT)
+*.db
+*.sqlite3
+
+# =========================
+# ML / RAG (generated)
+# =========================
+chroma/
+faiss/
+index/
+rag_cache/
+vector_store/
+embeddings/
+models/
+*.pt
+*.bin
+
+# Keep vector npz only if required
+!/backend/src/data/
+!/backend/src/data/**/*.npz
+
+# =========================
+# Android / Frontend
+# =========================
+**/build/
+**/.gradle/
+*.apk
+*.aab
+
+# Keystore (NEVER COMMIT)
+keystore/
+*.jks
+*.keystore
+
+# =========================
+# Packaging
+# =========================
+dist/
+build/
+*.egg-info/
+*.egg
+*.whl
+
+# =========================
+# Jupyter
+# =========================
+.ipynb_checkpoints/
+
+# =========================
+# Misc
+# =========================
+*.bak
+*.tmp

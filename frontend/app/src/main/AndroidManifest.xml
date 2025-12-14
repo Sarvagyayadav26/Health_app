@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools">
+
+    <uses-permission android:name="android.permission.INTERNET"/>
+
+    <application
+        android:allowBackup="true"
+        android:dataExtractionRules="@xml/data_extraction_rules"
+        android:fullBackupContent="@xml/backup_rules"
+        android:icon="@mipmap/ic_launcher"
+        android:label="Mental Health Chat"
+        android:roundIcon="@mipmap/ic_launcher_round"
+        android:supportsRtl="true"
+        android:theme="@style/Theme.MentalHealthChat"
+        android:usesCleartextTraffic="true">
+
+        <!-- Login Activity -->
+        <activity android:name="com.sarvagya.mentalhealthchat.ui.LoginActivity" />
+
+        <!-- Register Activity -->
+        <activity android:name="com.sarvagya.mentalhealthchat.ui.RegisterActivity" />
+
+        <!-- Home Activity (Main Dashboard) -->
+        <activity android:name="com.sarvagya.mentalhealthchat.ui.HomeActivity" />
+        
+        <!-- Relief Chat Activity (Chat Screen) -->
+        <activity android:name="com.sarvagya.mentalhealthchat.ui.ReliefChatActivity" />
+        
+        <!-- Mental Health Topics Activity -->
+        <activity android:name="com.sarvagya.mentalhealthchat.ui.MentalHealthTopicsActivity" />
+        
+        <!-- Article Detail Activity -->
+        <activity android:name="com.sarvagya.mentalhealthchat.ui.ArticleDetailActivity" />
+
+        <!-- Bubble Game Activity -->
+        <activity android:name="com.sarvagya.mentalhealthchat.ui.BubbleGameActivity" />
+        
+        <!-- Calm Space Activity (New) -->
+        <activity android:name="com.sarvagya.mentalhealthchat.ui.CalmSpaceActivity" />
+
+        <!-- Subscription Activity -->
+        <activity android:name="com.sarvagya.mentalhealthchat.ui.SubscriptionActivity" />
+        
+        <!-- Subscription Test Activity (for testing without Google Play) -->
+        <activity android:name="com.sarvagya.mentalhealthchat.ui.SubscriptionTestActivity" />
+
+        <!-- Main Activity (Launcher) -->
+        <activity
+            android:name="com.sarvagya.mentalhealthchat.ui.MainActivity"
+            android:exported="true"
+            android:theme="@style/Theme.MentalHealthChat">
+
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+
+        </activity>
+
+    </application>
+
+</manifest>

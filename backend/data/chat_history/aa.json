@@ -1,0 +1,52 @@
+[
+  {
+    "role": "user",
+    "content": "hi",
+    "time": "2025-12-14T08:45:59.257604"
+  },
+  {
+    "role": "assistant",
+    "content": "Hello! How can I help you today?",
+    "time": "2025-12-14T08:45:59.258861"
+  },
+  {
+    "role": "user",
+    "content": "hi",
+    "time": "2025-12-14T08:46:01.556408"
+  },
+  {
+    "role": "assistant",
+    "content": "Hello! How can I help you today?",
+    "time": "2025-12-14T08:46:01.557517"
+  },
+  {
+    "role": "user",
+    "content": "hi",
+    "time": "2025-12-14T08:46:02.950744"
+  },
+  {
+    "role": "assistant",
+    "content": "Hello! How can I help you today?",
+    "time": "2025-12-14T08:46:02.951749"
+  },
+  {
+    "role": "user",
+    "content": "hi",
+    "time": "2025-12-14T08:46:04.547242"
+  },
+  {
+    "role": "assistant",
+    "content": "Hello! 👋 How can I help you today?",
+    "time": "2025-12-14T08:46:04.549258"
+  },
+  {
+    "role": "user",
+    "content": "hi",
+    "time": "2025-12-14T08:46:05.989307"
+  },
+  {
+    "role": "assistant",
+    "content": "Hello! 👋 How can I assist you today?",
+    "time": "2025-12-14T08:46:05.991307"
+  }
+]

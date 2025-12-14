@@ -1,0 +1,14 @@
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="64dp"
+    android:height="64dp"
+    android:viewportWidth="24"
+    android:viewportHeight="24">
+    <!-- Heart/Empathy Icon -->
+    <path
+        android:fillColor="#81ECEC"
+        android:pathData="M12,21.35l-1.45,-1.32C5.4,15.36 2,12.28 2,8.5 2,5.42 4.42,3 7.5,3c1.74,0 3.41,0.81 4.5,2.09C13.09,3.81 14.76,3 16.5,3 19.58,3 22,5.42 22,8.5c0,3.78 -3.4,6.86 -8.55,11.54L12,21.35Z"/>
+    <path
+        android:fillColor="#F7F8FA"
+        android:fillAlpha="0.4"
+        android:pathData="M12,19l-1,-1C6,14 4,11 4,8.5C4,6 5.5,5 7.5,5C9,5 10.5,6 11,7L13,7C13.5,6 15,5 16.5,5C18.5,5 20,6 20,8.5C20,11 18,14 13,18L12,19Z"/>
+</vector>

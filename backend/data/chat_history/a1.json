@@ -1,0 +1,32 @@
+[
+  {
+    "role": "user",
+    "content": "hi",
+    "time": "2025-12-14T08:23:21.499608"
+  },
+  {
+    "role": "assistant",
+    "content": "Hello! How can I help you today?",
+    "time": "2025-12-14T08:23:21.503720"
+  },
+  {
+    "role": "user",
+    "content": "hi",
+    "time": "2025-12-14T08:25:13.870227"
+  },
+  {
+    "role": "assistant",
+    "content": "Hello! How can I help you today?",
+    "time": "2025-12-14T08:25:13.871744"
+  },
+  {
+    "role": "user",
+    "content": "hi",
+    "time": "2025-12-14T08:29:29.087324"
+  },
+  {
+    "role": "assistant",
+    "content": "Hello! 👋 How can I help you today?",
+    "time": "2025-12-14T08:29:29.088322"
+  }
+]

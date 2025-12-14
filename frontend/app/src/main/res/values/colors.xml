@@ -1,0 +1,26 @@
+<resources>
+    <!-- Calming Psychology-Based Palette -->
+    
+    <!-- Background: #F7F8FA (Soft Light Grey-White) -->
+    <color name="bg">#F7F8FA</color>
+
+    <!-- Primary: #6C8EF5 (Soft Blue - Trust, Relaxation) -->
+    <color name="primary">#6C8EF5</color>
+    <color name="primaryDark">#5A7CE2</color> <!-- Slightly darker for states -->
+
+    <!-- Accent: #76D7C4 (Mint Green - Healing, Balance) -->
+    <color name="accent">#76D7C4</color>
+
+    <!-- Button Colors -->
+    <color name="btnLavender">#A29BFE</color> <!-- Emotional Soothing -->
+    <color name="btnMint">#81ECEC</color>     <!-- Balance -->
+    <color name="btnPeach">#FABD5A</color>     <!-- Comfort -->
+
+    <!-- Chat Colors -->
+    <color name="chatUser">#6C8EF5</color>     <!-- Primary Blue -->
+    <color name="chatBot">#E5E7EB</color>      <!-- Soft Grey -->
+    
+    <!-- Text Colors -->
+    <color name="textDark">#2D3436</color>     <!-- Softer than pure black -->
+    <color name="textLight">#636E72</color>    <!-- Secondary text -->
+</resources>

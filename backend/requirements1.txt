@@ -1,0 +1,31 @@
+# CPU Torch (MUST be at the top)
+--extra-index-url https://download.pytorch.org/whl/cpu
+torch==2.1.0+cpu
+
+# Transformers compatible with torch 2.1
+transformers==4.37.2
+
+# Web Framework + Server
+fastapi==0.110.0
+uvicorn[standard]==0.29.0
+flask==3.0.2
+
+# Rate Limiting
+slowapi==0.1.7
+
+# Pydantic for validation
+pydantic==2.6.3
+
+# Machine Learning / Embeddings
+numpy==1.26.4
+scikit-learn==1.4.0
+sentence-transformers==2.3.1
+
+# ENV management
+python-dotenv==1.0.1
+
+# Groq API (NEW FIXED VERSION)
+groq==0.6.0
+httpx==0.27.0
+
+bcrypt==4.0.1

@@ -1,0 +1,13 @@
+<resources>
+
+    <!-- Changed parent from Theme.AppCompat.Light.NoActionBar to Theme.MaterialComponents.DayNight.NoActionBar -->
+    <style name="Theme.MentalHealthChat" parent="Theme.MaterialComponents.DayNight.NoActionBar">
+        <!-- Customize your theme here -->
+        <item name="colorPrimary">@color/primary</item>
+        <item name="colorPrimaryVariant">@color/primaryDark</item>
+        <item name="colorOnPrimary">#FFFFFF</item>
+        <item name="colorSecondary">@color/accent</item>
+        <item name="colorOnSecondary">#000000</item>
+    </style>
+
+</resources>

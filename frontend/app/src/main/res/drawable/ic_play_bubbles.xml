@@ -1,0 +1,21 @@
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="64dp"
+    android:height="64dp"
+    android:viewportWidth="24"
+    android:viewportHeight="24">
+    <!-- Playful Bubbles Icon -->
+    <!-- Main bubbles shape -->
+    <path
+        android:fillColor="#A29BFE"
+        android:pathData="M4.5,11h-2V9H1v2h1.5V13H1v2h1.5v2h2V15H6V13H4.5V11zM9,7h-2V5H5v2h2V9H5v2h2v2h2V11H9V9h2V7H9zM21,3h-2V1H17v2h2V5H17v2h2v2h2V7H21V5h2V3H21z"/>
+    
+    <!-- Circle 1: cx=14, cy=14, r=5 -->
+    <path
+        android:fillColor="#81ECEC"
+        android:pathData="M9,14 A5,5 0 1,0 19,14 A5,5 0 1,0 9,14"/>
+        
+    <!-- Circle 2: cx=18, cy=10, r=2 -->
+    <path
+        android:fillColor="#FABD5A"
+        android:pathData="M16,10 A2,2 0 1,0 20,10 A2,2 0 1,0 16,10"/>
+</vector>

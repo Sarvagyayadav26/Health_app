@@ -1,0 +1,102 @@
+[
+  {
+    "role": "user",
+    "content": "hi",
+    "time": "2025-12-13T04:19:22.781279"
+  },
+  {
+    "role": "assistant",
+    "content": "Hello! 👋 How can I help you today?",
+    "time": "2025-12-13T04:19:22.782280"
+  },
+  {
+    "role": "user",
+    "content": "hi",
+    "time": "2025-12-13T04:19:29.566868"
+  },
+  {
+    "role": "assistant",
+    "content": "Hello! 👋 How can I help you today?",
+    "time": "2025-12-13T04:19:29.568377"
+  },
+  {
+    "role": "user",
+    "content": "hi",
+    "time": "2025-12-13T04:19:33.141587"
+  },
+  {
+    "role": "assistant",
+    "content": "Hello! How can I help you today?",
+    "time": "2025-12-13T04:19:33.144100"
+  },
+  {
+    "role": "user",
+    "content": "hi",
+    "time": "2025-12-13T04:19:36.448150"
+  },
+  {
+    "role": "assistant",
+    "content": "Hello! 👋 How can I help you today?",
+    "time": "2025-12-13T04:19:36.449160"
+  },
+  {
+    "role": "user",
+    "content": "hi",
+    "time": "2025-12-13T04:19:38.725129"
+  },
+  {
+    "role": "assistant",
+    "content": "Hello! 👋 How can I help you today?",
+    "time": "2025-12-13T04:19:38.726174"
+  },
+  {
+    "role": "user",
+    "content": "hi",
+    "time": "2025-12-13T04:19:41.315709"
+  },
+  {
+    "role": "assistant",
+    "content": "Hello! 👋 How can I help you today?",
+    "time": "2025-12-13T04:19:41.316717"
+  },
+  {
+    "role": "user",
+    "content": "hi",
+    "time": "2025-12-13T04:19:46.949946"
+  },
+  {
+    "role": "assistant",
+    "content": "Hello! How can I help you today?",
+    "time": "2025-12-13T04:19:46.950932"
+  },
+  {
+    "role": "user",
+    "content": "hi",
+    "time": "2025-12-13T04:39:34.914442"
+  },
+  {
+    "role": "assistant",
+    "content": "Hello! How can I help you today?",
+    "time": "2025-12-13T04:39:34.915426"
+  },
+  {
+    "role": "user",
+    "content": "hi",
+    "time": "2025-12-13T04:41:02.002381"
+  },
+  {
+    "role": "assistant",
+    "content": "Hello! How can I help you today?",
+    "time": "2025-12-13T04:41:02.003376"
+  },
+  {
+    "role": "user",
+    "content": "hi",
+    "time": "2025-12-13T16:17:50.892717"
+  },
+  {
+    "role": "assistant",
+    "content": "Hello! 👋 How can I help you today?",
+    "time": "2025-12-13T16:17:50.897106"
+  }
+]

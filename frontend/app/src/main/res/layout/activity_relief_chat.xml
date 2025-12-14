@@ -1,0 +1,134 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:padding="16dp">
+
+    <!-- Header -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:gravity="center_vertical"
+        android:layout_marginBottom="8dp">
+        
+        <Button
+            android:id="@+id/backBtn"
+            android:layout_width="70dp"
+            android:layout_height="40dp"
+            android:text="Back"
+            android:textSize="12sp"
+            android:background="@drawable/button_style"
+            android:textColor="#000000"
+            android:padding="4dp"
+            android:minWidth="0dp"
+            android:minHeight="0dp"/>
+            
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Relief Chat"
+            android:textSize="16sp"
+            android:textStyle="bold"
+            android:layout_marginStart="8dp"
+            android:layout_marginEnd="8dp"/>
+
+        <Spinner
+            android:id="@+id/chatHistorySpinner"
+            android:layout_width="wrap_content"
+            android:layout_height="40dp"
+            android:minWidth="80dp"
+            android:background="@drawable/spinner_style"
+            android:popupBackground="@drawable/spinner_style"
+            android:layout_marginEnd="8dp"/>
+
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="center_vertical">
+            
+            <Button
+                android:id="@+id/chatsBtn"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Chats: --"
+                android:textSize="12sp"
+                android:padding="8dp"
+                android:minHeight="0dp"
+                android:minWidth="0dp"
+                android:background="@drawable/button_style"
+                android:textColor="#000000" />
+
+            <ImageButton
+                android:id="@+id/addChatsBtn"
+                android:layout_width="32dp"
+                android:layout_height="32dp"
+                android:src="@drawable/ic_add_circle" 
+                android:background="?attr/selectableItemBackgroundBorderless"
+                android:contentDescription="Add Chats"
+                android:layout_marginStart="4dp"
+                android:visibility="gone" /> 
+        </LinearLayout>
+    </LinearLayout>
+
+    <!-- Chat output box -->
+    <ScrollView
+        android:id="@+id/chatScroll"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:background="#eeeeee"
+        android:padding="12dp">
+
+        <LinearLayout
+            android:id="@+id/chatContainer"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical">
+
+            <TextView
+                android:id="@+id/chatBox"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Chat output will appear here"
+                android:textSize="16sp"
+                android:textColor="#003366" />
+
+        </LinearLayout>
+    </ScrollView>
+
+    <!-- Subscribe Button (Initially Hidden) -->
+    <!-- Added for billing integration -->
+    <Button
+        android:id="@+id/subscribeBtn"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Buy More Chats"
+        android:background="@drawable/button_style"
+        android:textColor="#000000"
+        android:layout_marginTop="8dp"
+        android:visibility="gone" />
+
+    <!-- Input box -->
+    <EditText
+        android:id="@+id/inputBox"
+        android:hint="Type your message..."
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:padding="12dp"
+        android:layout_marginTop="10dp" />
+
+    <!-- Send button -->
+    <Button
+        android:id="@+id/sendBtn"
+        android:text="Send"
+        android:padding="12dp"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="10dp"
+        android:background="@drawable/button_style"
+        android:textColor="#000000" />
+
+</LinearLayout>

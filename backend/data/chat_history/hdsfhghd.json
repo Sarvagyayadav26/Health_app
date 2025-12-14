@@ -1,0 +1,62 @@
+[
+  {
+    "role": "user",
+    "content": "hi",
+    "time": "2025-12-13T04:28:52.839151"
+  },
+  {
+    "role": "assistant",
+    "content": "Hello! How can I help you today?",
+    "time": "2025-12-13T04:28:52.839151"
+  },
+  {
+    "role": "user",
+    "content": "hi",
+    "time": "2025-12-13T04:28:55.312904"
+  },
+  {
+    "role": "assistant",
+    "content": "Hello! How can I help you today?",
+    "time": "2025-12-13T04:28:55.313914"
+  },
+  {
+    "role": "user",
+    "content": "hi",
+    "time": "2025-12-13T04:28:57.112564"
+  },
+  {
+    "role": "assistant",
+    "content": "Hello! 👋 How can I help you today?",
+    "time": "2025-12-13T04:28:57.114562"
+  },
+  {
+    "role": "user",
+    "content": "hi",
+    "time": "2025-12-13T04:28:58.567637"
+  },
+  {
+    "role": "assistant",
+    "content": "Hello! How can I help you today?",
+    "time": "2025-12-13T04:28:58.568640"
+  },
+  {
+    "role": "user",
+    "content": "hi",
+    "time": "2025-12-13T04:29:00.117362"
+  },
+  {
+    "role": "assistant",
+    "content": "Hello! How can I help you today?",
+    "time": "2025-12-13T04:29:00.117362"
+  },
+  {
+    "role": "user",
+    "content": "hi",
+    "time": "2025-12-13T04:29:04.227754"
+  },
+  {
+    "role": "assistant",
+    "content": "Hi there! 👋 How can I help you today?",
+    "time": "2025-12-13T04:29:04.228754"
+  }
+]

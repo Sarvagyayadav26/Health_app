@@ -1,0 +1,87 @@
+<?xml version="1.0" encoding="utf-8"?>
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@drawable/calm_gradient">
+
+    <!-- Content Container -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:orientation="vertical"
+        android:gravity="center"
+        android:padding="32dp">
+
+        <TextView
+            android:id="@+id/titleText"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Calm Space"
+            android:textSize="24sp"
+            android:textStyle="bold"
+            android:textColor="#455A64"
+            android:layout_marginBottom="48dp"
+            android:letterSpacing="0.05"/>
+
+        <!-- Breathing Circle -->
+        <FrameLayout
+            android:layout_width="250dp"
+            android:layout_height="250dp"
+            android:layout_gravity="center"
+            android:layout_marginBottom="48dp">
+
+            <!-- Outer Glow -->
+            <View
+                android:id="@+id/breathingCircleOuter"
+                android:layout_width="250dp"
+                android:layout_height="250dp"
+                android:background="@drawable/circle_shape"
+                android:alpha="0.3"
+                android:backgroundTint="#B2DFDB"/>
+
+            <!-- Inner Circle -->
+            <View
+                android:id="@+id/breathingCircleInner"
+                android:layout_width="200dp"
+                android:layout_height="200dp"
+                android:layout_gravity="center"
+                android:background="@drawable/circle_shape"
+                android:backgroundTint="#80CBC4"/>
+            
+            <!-- Instruction Text -->
+            <TextView
+                android:id="@+id/breathInstruction"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center"
+                android:text="Inhale"
+                android:textSize="20sp"
+                android:textColor="#FFFFFF"
+                android:textStyle="bold"/>
+        </FrameLayout>
+
+        <!-- Mindful Quote -->
+        <TextView
+            android:id="@+id/quoteText"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="&quot;Peace comes from within. Do not seek it without.&quot;"
+            android:textSize="16sp"
+            android:textColor="#546E7A"
+            android:textAlignment="center"
+            android:fontFamily="serif"
+            android:layout_marginBottom="48dp"/>
+
+        <Button
+            android:id="@+id/closeBtn"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="I feel calmer"
+            android:background="@drawable/button_style"
+            android:textColor="#000000"
+            android:paddingStart="32dp"
+            android:paddingEnd="32dp"/>
+
+    </LinearLayout>
+
+</FrameLayout>

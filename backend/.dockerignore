@@ -1,0 +1,62 @@
+# ----- Environment / Secrets -----
+.env
+*.env
+.env.*
+*.key
+*.pem
+*.credentials
+
+# ----- Python -----
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.python-version
+
+# Virtual environments
+venv/
+env/
+.venv/
+
+# ----- Cache / Logs -----
+logs/
+*.log
+.cache/
+*.sqlite3
+
+# ----- OS / Editor Files -----
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+
+# ----- Build / Packaging -----
+dist/
+build/
+*.egg-info/
+
+# -------------------------------------------------
+# IGNORE confidential data at ROOT only
+# -------------------------------------------------
+/confidential data/
+
+# -------------------------------------------------
+# IGNORE root-level /data (if any)
+# KEEP src/data for vector store
+# -------------------------------------------------
+/data/*
+!src/data/
+!src/data/**
+!src/data/*.npz
+
+# ----- RAG / Local cache (not needed in image) -----
+chroma/
+faiss/
+index/
+vector_store/
+embeddings/
+rag_cache/
+
+# ----- Other -----
+.git
+.gitignore
