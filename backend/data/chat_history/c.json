@@ -98,5 +98,15 @@
     "role": "assistant",
     "content": "Hello! How can I help you today?",
     "time": "2025-12-13T16:39:48.124802"
+  },
+  {
+    "role": "user",
+    "content": "hi",
+    "time": "2025-12-14T16:44:13.088819"
+  },
+  {
+    "role": "assistant",
+    "content": "Hi there! 🌟 How are you feeling today?",
+    "time": "2025-12-14T16:44:14.589610"
   }
 ]

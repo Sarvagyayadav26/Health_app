@@ -45,7 +45,7 @@ def create_user(email: str, age: int, sex: str, password: str):
 
     cursor.execute("""
         INSERT INTO users (email, age, sex, password_hash, usage_count, chats)
-        VALUES (?, ?, ?, ?, 0, 5)
+        VALUES (?, ?, ?, ?, 0, 2)
     """, (email, age, sex, hashed))
 
     conn.commit()

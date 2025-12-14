@@ -98,5 +98,75 @@
     "role": "assistant",
     "content": "Hello! 👋 How can I help you today?",
     "time": "2025-12-13T16:17:50.897106"
+  },
+  {
+    "role": "user",
+    "content": "hi",
+    "time": "2025-12-14T17:15:54.569968"
+  },
+  {
+    "role": "assistant",
+    "content": "Hi there! I’m here for you—what’s on your mind today?",
+    "time": "2025-12-14T17:15:55.844667"
+  },
+  {
+    "role": "user",
+    "content": "hi",
+    "time": "2025-12-14T17:16:00.383932"
+  },
+  {
+    "role": "assistant",
+    "content": "Hey! How’s it going? If there’s something you’d like to talk about or need help with, I’m all ears.",
+    "time": "2025-12-14T17:16:00.992909"
+  },
+  {
+    "role": "user",
+    "content": "hi",
+    "time": "2025-12-14T17:17:01.573466"
+  },
+  {
+    "role": "assistant",
+    "content": "Hi! 👋 I’m here to listen and help however you need. What’s on your mind today?",
+    "time": "2025-12-14T17:17:02.328451"
+  },
+  {
+    "role": "user",
+    "content": "hi",
+    "time": "2025-12-14T17:17:05.292446"
+  },
+  {
+    "role": "assistant",
+    "content": "Hi! 🌟 I’m glad you reached out. How can I support you today?",
+    "time": "2025-12-14T17:17:05.918904"
+  },
+  {
+    "role": "user",
+    "content": "hi",
+    "time": "2025-12-14T17:17:06.979042"
+  },
+  {
+    "role": "assistant",
+    "content": "Hey! 😊 How’s your day going so far?",
+    "time": "2025-12-14T17:17:07.577209"
+  },
+  {
+    "role": "user",
+    "content": "hi",
+    "time": "2025-12-14T17:17:08.753339"
+  },
+  {
+    "role": "assistant",
+    "content": "Hey there! 🌟 How are you feeling today? I'm here to listen and support you however you need.",
+    "time": "2025-12-14T17:17:09.374725"
+  },
+  {
+    "role": "user",
+    "content": "hi",
+    "time": "2025-12-14T17:17:10.657265"
+  },
+  {
+    "role": "assistant",
+    "content": "Hi! 🌟 I’m here for you—how are you feeling today?",
+    "time": "2025-12-14T17:17:11.317705"
   }
 ]

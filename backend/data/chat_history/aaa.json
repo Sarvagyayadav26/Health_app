@@ -48,5 +48,45 @@
     "role": "assistant",
     "content": "Hello! 👋 How can I help you today?",
     "time": "2025-12-13T16:51:17.931237"
+  },
+  {
+    "role": "user",
+    "content": "hi",
+    "time": "2025-12-14T16:02:20.613622"
+  },
+  {
+    "role": "assistant",
+    "content": "Hi there! How are you feeling today? 🌟",
+    "time": "2025-12-14T16:02:21.567795"
+  },
+  {
+    "role": "user",
+    "content": "hi",
+    "time": "2025-12-14T16:02:23.482156"
+  },
+  {
+    "role": "assistant",
+    "content": "Hi! I’m here for you—how’s everything going today? 🌼",
+    "time": "2025-12-14T16:02:24.456850"
+  },
+  {
+    "role": "user",
+    "content": "hi",
+    "time": "2025-12-14T16:02:26.751409"
+  },
+  {
+    "role": "assistant",
+    "content": "Hey there! 👋 How are you doing today?",
+    "time": "2025-12-14T16:02:27.793902"
+  },
+  {
+    "role": "user",
+    "content": "hi",
+    "time": "2025-12-14T17:10:28.095478"
+  },
+  {
+    "role": "assistant",
+    "content": "Hey! I’m glad you reached out. How can I support you today? 🌟",
+    "time": "2025-12-14T17:10:28.736012"
   }
 ]

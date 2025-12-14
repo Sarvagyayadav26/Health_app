@@ -238,5 +238,45 @@
     "role": "assistant",
     "content": "Hello! How can I help you today?",
     "time": "2025-12-14T08:38:54.372696"
+  },
+  {
+    "role": "user",
+    "content": "hi",
+    "time": "2025-12-14T16:01:23.939615"
+  },
+  {
+    "role": "assistant",
+    "content": "Hi there! 👋 How can I support you today?",
+    "time": "2025-12-14T16:01:25.982689"
+  },
+  {
+    "role": "user",
+    "content": "hi",
+    "time": "2025-12-14T16:01:38.934057"
+  },
+  {
+    "role": "assistant",
+    "content": "Hi! 🌼 How can I help you today?",
+    "time": "2025-12-14T16:01:40.240082"
+  },
+  {
+    "role": "user",
+    "content": "hi",
+    "time": "2025-12-14T16:01:44.631518"
+  },
+  {
+    "role": "assistant",
+    "content": "Hey! 😊 How are you doing today? How can I support you?",
+    "time": "2025-12-14T16:01:45.623707"
+  },
+  {
+    "role": "user",
+    "content": "hi",
+    "time": "2025-12-14T17:01:25.097182"
+  },
+  {
+    "role": "assistant",
+    "content": "Hi! 🌟 How are you feeling today? I'm here to listen and help in any way I can.",
+    "time": "2025-12-14T17:01:25.923821"
   }
 ]

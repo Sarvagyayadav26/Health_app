@@ -30,12 +30,12 @@ from src.storage.user_db import (
 # ======================================================================
 # 🟢 For INTERNAL TESTING: Use "testing"
 # 🔴 For ANDROID PRODUCTION: Use "android"
-DEPLOYMENT_MODE = "testing"  # ← CHANGE THIS LINE FOR DIFFERENT DEPLOYMENTS
 
-# 📊 USAGE THRESHOLD - Control how many chats allowed
-# Set to -1 to disable limit
-THRESHOLD_TOTAL = 5              # ← Max total chats (set -1 to disable)
-# ======================================================================
+# DEPLOYMENT_MODE = "testing"  # ← CHANGE THIS LINE FOR DIFFERENT DEPLOYMENTS
+DEPLOYMENT_MODE = "android"  # ← CHANGE THIS LINE FOR DIFFERENT DEPLOYMENTS
+
+# Set chat threshold (0 = unlimited, or set to your desired limit)
+THRESHOLD_TOTAL = 0
 
 # Logging setup
 logging.basicConfig(level=logging.INFO)
@@ -109,7 +109,7 @@ async def register(req: RegisterRequest):
         if get_user(req.email):
             if DEPLOYMENT_MODE == "android":
                 return {
-                    "success": "existing",
+                    "success": "User already exists, continue your healing",
                     "error": None
                 }
             else:
@@ -120,11 +120,11 @@ async def register(req: RegisterRequest):
         if DEPLOYMENT_MODE == "android":
             return {
                 "success": "New User Created",
-                "chats": 5,
+                "chats": 2,
                 "error": None
             }
         else:
-            return JSONResponse({"success": "User registered", "chats": 5})
+            return JSONResponse({"success": "User registered", "chats": 2})
     
     except Exception as e:
         if DEPLOYMENT_MODE == "android":
@@ -202,7 +202,7 @@ async def chat(req: ChatRequest):
     # Get usage statistics
     usage_total = user[4]              # Total usage count
     chats = user[5] if len(user) > 5 else 0  # Available chats
-    
+    print(f"[DEBUG] /chat endpoint - Email: {email}, Chats before deduction: {chats}")
     try:
         usage_total = int(usage_total) if usage_total else 0
         chats = int(chats) if chats else 0
@@ -293,8 +293,11 @@ async def chat(req: ChatRequest):
             cursor = conn.cursor()
             cursor.execute("UPDATE users SET chats = chats - 1 WHERE email = ?", (email,))
             conn.commit()
+            # Fetch updated chats for debug
+            cursor.execute("SELECT chats FROM users WHERE email = ?", (email,))
+            updated_chats = cursor.fetchone()[0]
+            print(f"[DEBUG] /chat endpoint - Email: {email}, Chats after deduction: {updated_chats}")
             conn.close()
-            updated_chats = chats - 1
             
             # Also increment usage_count for statistics
             increment_usage(email)
