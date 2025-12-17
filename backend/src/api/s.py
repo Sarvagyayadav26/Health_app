@@ -520,7 +520,9 @@ async def verify_purchase(req: dict):
     # Product ID -> Number of chats to add
     product_chats = {
     "mental_health_5_chats_v1": 5,
-    "mental_health_10_chats_v1": 10
+    "mental_health_10_chats_v1": 10,
+        "mental_health_5_chats": 5,
+    "mental_health_10_chats": 10,
 }
     
     chats_to_add = product_chats.get(product_id, 5)  # Default 5 if unknown
