@@ -109,7 +109,7 @@ if DEPLOYMENT_MODE == "testing":
     
 elif DEPLOYMENT_MODE == "android":
     # 🔴 ANDROID PRODUCTION - Async RAG pipeline
-    from src.android_main import initialize_all, run_rag_pipeline
+    from src.api.android_main import initialize_all, run_rag_pipeline
     
     @app.on_event("startup")
     def startup_event():
