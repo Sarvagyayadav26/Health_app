@@ -78,6 +78,9 @@ build/
 *.egg
 *.whl
 
+# Ignore all JSON files
+*.json
+
 # =========================
 # Jupyter
 # =========================

@@ -1,5 +1,6 @@
 package com.sarvagya.mentalhealthchat.ui
 
+import android.content.Intent
 import android.os.Bundle
 import android.widget.Button
 import android.widget.TextView
@@ -13,6 +14,7 @@ class SubscriptionActivity : AppCompatActivity() {
     private lateinit var billingClient: BillingClient
     private lateinit var subscribeBtn: Button
     private lateinit var priceText: TextView
+    private lateinit var statusText: TextView
 
     // Define your product IDs (you'll create these in Google Play Console)
     private val PRODUCT_ID_5_CHATS = "mental_health_5_chats_v1"
@@ -24,11 +26,59 @@ class SubscriptionActivity : AppCompatActivity() {
 
         subscribeBtn = findViewById(R.id.subscribeBtn)
         priceText = findViewById(R.id.priceText)
+        statusText = findViewById(R.id.statusText)
+
+        // Show remaining chats if passed via Intent, otherwise fall back to cached value
+        val remainingFromIntent = intent.getIntExtra("CHATS", Int.MIN_VALUE)
+        if (remainingFromIntent != Int.MIN_VALUE) {
+            if (remainingFromIntent > 0) {
+                statusText.text = "You have $remainingFromIntent chats remaining"
+            } else if (remainingFromIntent == 0) {
+                statusText.text = "You've reached your free chat limit"
+            } else {
+                statusText.text = "Start a conversation or upgrade your plan"
+            }
+        } else {
+            // try cached value
+            val cached = getSharedPreferences("app", MODE_PRIVATE).getInt("chats", -1)
+            if (cached >= 0) {
+                statusText.text = if (cached > 0) "You have $cached chats remaining" else "You've reached your free chat limit"
+            }
+        }
 
         val backBtn = findViewById<Button>(R.id.backBtn)
         backBtn.setOnClickListener { finish() }
 
         setupBillingClient()
+
+        // Ensure UI reflects latest cached value when first created
+        refreshStatus()
+    }
+
+    override fun onResume() {
+        super.onResume()
+        // Refresh status when returning to this activity
+        refreshStatus()
+    }
+
+    override fun onNewIntent(intent: Intent?) {
+        super.onNewIntent(intent)
+        intent?.let { setIntent(it) }
+        refreshStatus()
+    }
+
+    private fun refreshStatus() {
+        val prefs = getSharedPreferences("app", MODE_PRIVATE)
+        val cached = prefs.getInt("chats", Int.MIN_VALUE)
+        val remainingFromIntent = intent?.getIntExtra("CHATS", Int.MIN_VALUE) ?: Int.MIN_VALUE
+
+        val valueToShow = if (cached != Int.MIN_VALUE) cached else remainingFromIntent
+
+        statusText.text = when {
+            valueToShow == Int.MIN_VALUE -> "Start a conversation or upgrade your plan"
+            valueToShow > 0 -> "You have $valueToShow chats remaining"
+            else -> "You've reached your free chat limit"
+        }
     }
 
     private fun setupBillingClient() {

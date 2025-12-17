@@ -11,7 +11,8 @@
         android:layout_height="wrap_content"
         android:orientation="horizontal"
         android:gravity="center_vertical"
-        android:layout_marginBottom="8dp">
+        android:layout_marginBottom="8dp"
+        android:paddingTop="8dp">
         
         <Button
             android:id="@+id/backBtn"
@@ -26,22 +27,16 @@
             android:minHeight="0dp"/>
             
         <TextView
-            android:layout_width="wrap_content"
+            android:layout_width="0dp"
             android:layout_height="wrap_content"
+            android:layout_weight="1"
             android:text="Relief Chat"
             android:textSize="16sp"
             android:textStyle="bold"
             android:layout_marginStart="8dp"
             android:layout_marginEnd="8dp"/>
 
-        <Spinner
-            android:id="@+id/chatHistorySpinner"
-            android:layout_width="wrap_content"
-            android:layout_height="40dp"
-            android:minWidth="80dp"
-            android:background="@drawable/spinner_style"
-            android:popupBackground="@drawable/spinner_style"
-            android:layout_marginEnd="8dp"/>
+        <!-- Spinner removed per request -->
 
         <LinearLayout
             android:layout_width="wrap_content"
@@ -61,15 +56,37 @@
                 android:background="@drawable/button_style"
                 android:textColor="#000000" />
 
-            <ImageButton
-                android:id="@+id/addChatsBtn"
-                android:layout_width="32dp"
-                android:layout_height="32dp"
-                android:src="@drawable/ic_add_circle" 
-                android:background="?attr/selectableItemBackgroundBorderless"
-                android:contentDescription="Add Chats"
+            <Button
+                android:id="@+id/chatsHistoryBtn"
+                android:layout_width="wrap_content"
+                android:layout_height="44dp"
+                android:text="Chats history"
+                android:textSize="14sp"
+                android:paddingLeft="12dp"
+                android:paddingRight="12dp"
+                android:layout_marginStart="8dp"
+                android:layout_marginEnd="8dp"
+                android:layout_marginRight="8dp"
+                android:background="@drawable/button_style"
+                android:textColor="#000000"
+                android:minWidth="0dp"
+                android:minHeight="0dp"
+                android:elevation="4dp" />
+            <Button
+                android:id="@+id/closeHistoryBtn"
+                android:layout_width="wrap_content"
+                android:layout_height="40dp"
+                android:text="Close history"
+                android:textSize="13sp"
+                android:paddingLeft="10dp"
+                android:paddingRight="10dp"
                 android:layout_marginStart="4dp"
-                android:visibility="gone" /> 
+                android:layout_marginEnd="4dp"
+                android:background="@drawable/button_style"
+                android:textColor="#000000"
+                android:visibility="gone"
+                android:minWidth="0dp"
+                android:minHeight="0dp" />
         </LinearLayout>
     </LinearLayout>
 

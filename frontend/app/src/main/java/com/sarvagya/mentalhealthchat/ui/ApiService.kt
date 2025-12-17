@@ -42,7 +42,8 @@ data class ChatHistoryMessagesResponse(
 
 data class ChatHistoryMessagesRequest(
     val email: String,
-    val limit: Int
+    val limit: Int,
+    val session_id: String
 )
 
 interface ApiService {
