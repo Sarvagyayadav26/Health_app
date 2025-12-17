@@ -2,61 +2,101 @@
   {
     "role": "user",
     "content": "hi",
-    "time": "2025-12-14T08:45:59.257604"
+    "time": "2025-12-17T06:54:52.559910"
   },
   {
     "role": "assistant",
-    "content": "Hello! How can I help you today?",
-    "time": "2025-12-14T08:45:59.258861"
+    "content": "Hey there! How are you doing today? If there's anything on your mind or something you'd like to talk about, I'm here to listen.",
+    "time": "2025-12-17T06:54:53.426844"
   },
   {
     "role": "user",
     "content": "hi",
-    "time": "2025-12-14T08:46:01.556408"
+    "time": "2025-12-17T06:54:53.446438"
   },
   {
     "role": "assistant",
-    "content": "Hello! How can I help you today?",
-    "time": "2025-12-14T08:46:01.557517"
+    "content": "Hey there! How are you doing today? If there's anything on your mind or something you'd like to talk about, I'm here to listen.",
+    "time": "2025-12-17T06:54:53.447442"
   },
   {
     "role": "user",
     "content": "hi",
-    "time": "2025-12-14T08:46:02.950744"
+    "time": "2025-12-17T06:58:42.627899"
   },
   {
     "role": "assistant",
-    "content": "Hello! How can I help you today?",
-    "time": "2025-12-14T08:46:02.951749"
+    "content": "Hey! How are you feeling today? If there’s anything you’d like to share, I’m here for you.",
+    "time": "2025-12-17T06:58:43.520206"
   },
   {
     "role": "user",
     "content": "hi",
-    "time": "2025-12-14T08:46:04.547242"
+    "time": "2025-12-17T06:58:43.537458"
   },
   {
     "role": "assistant",
-    "content": "Hello! 👋 How can I help you today?",
-    "time": "2025-12-14T08:46:04.549258"
+    "content": "Hey! How are you feeling today? If there’s anything you’d like to share, I’m here for you.",
+    "time": "2025-12-17T06:58:43.538616"
+  },
+  {
+    "role": "user",
+    "content": "I am having career anxiety",
+    "time": "2025-12-17T06:59:33.420525"
+  },
+  {
+    "role": "assistant",
+    "content": "Hey, I hear you—career worries can feel overwhelming, but you’re not alone.  \nHere’s a quick, step‑by‑step way to start easing that anxiety:\n\n1. **Acknowledge the feeling**  \n   - It’s normal to feel anxious about your future. It’s your brain’s way of signaling that something needs attention.\n\n2. **Split the situation into two parts**  \n   - **What if you solve it?**  \n     *You’ll feel more in control, gain confidence, and create clear next steps.*  \n   - **What if you don’t solve it right now?**  \n     *You can still explore other options—there are plenty of paths that fit your skills and interests.*\n\n3. **Build a backup plan**  \n   - List a few alternative careers or side projects you could pursue if your first choice stalls.  \n   - Keep the list realistic and actionable (e.g., “take an online course in X,” “network with Y professionals,” “apply to 3 new roles per month”).\n\n4. **Start with the simplest task**  \n   - Pick one tiny action that moves you forward—maybe update your résumé, send a thank‑you email, or research a skill you’re curious about.  \n   - If it feels heavy, break it down further (e.g., “write one sentence about my experience” instead of “update the whole résumé”).\n\n5. **Create emotional safety**  \n   - Talk to a trusted friend or mentor about your fears; sharing often lightens the load.  \n   - Remind yourself that it’s okay to feel uncertain—many people share this feeling.\n\n6. **Take a calming pause**  \n   - Breathe deeply: inhale for 4 counts, hold for 4, exhale for 4.  \n   - Reflect on one thing you’ve already achieved; this helps ground you in reality.\n\n7. **Repeat and build momentum**  \n   - After completing each small step, celebrate the win.  \n   - Gradually add a bit more challenge as you feel comfortable.\n\nRemember, you’re not bound to a single path, and each small action brings you closer to clarity. If the anxiety feels too intense, consider speaking with a career counselor or therapist—they can offer tailored support. You’ve got this",
+    "time": "2025-12-17T06:59:35.517625"
+  },
+  {
+    "role": "user",
+    "content": "I am having career anxiety",
+    "time": "2025-12-17T06:59:35.531372"
+  },
+  {
+    "role": "assistant",
+    "content": "Hey, I hear you—career worries can feel overwhelming, but you’re not alone.  \nHere’s a quick, step‑by‑step way to start easing that anxiety:\n\n1. **Acknowledge the feeling**  \n   - It’s normal to feel anxious about your future. It’s your brain’s way of signaling that something needs attention.\n\n2. **Split the situation into two parts**  \n   - **What if you solve it?**  \n     *You’ll feel more in control, gain confidence, and create clear next steps.*  \n   - **What if you don’t solve it right now?**  \n     *You can still explore other options—there are plenty of paths that fit your skills and interests.*\n\n3. **Build a backup plan**  \n   - List a few alternative careers or side projects you could pursue if your first choice stalls.  \n   - Keep the list realistic and actionable (e.g., “take an online course in X,” “network with Y professionals,” “apply to 3 new roles per month”).\n\n4. **Start with the simplest task**  \n   - Pick one tiny action that moves you forward—maybe update your résumé, send a thank‑you email, or research a skill you’re curious about.  \n   - If it feels heavy, break it down further (e.g., “write one sentence about my experience” instead of “update the whole résumé”).\n\n5. **Create emotional safety**  \n   - Talk to a trusted friend or mentor about your fears; sharing often lightens the load.  \n   - Remind yourself that it’s okay to feel uncertain—many people share this feeling.\n\n6. **Take a calming pause**  \n   - Breathe deeply: inhale for 4 counts, hold for 4, exhale for 4.  \n   - Reflect on one thing you’ve already achieved; this helps ground you in reality.\n\n7. **Repeat and build momentum**  \n   - After completing each small step, celebrate the win.  \n   - Gradually add a bit more challenge as you feel comfortable.\n\nRemember, you’re not bound to a single path, and each small action brings you closer to clarity. If the anxiety feels too intense, consider speaking with a career counselor or therapist—they can offer tailored support. You’ve got this",
+    "time": "2025-12-17T06:59:35.531372"
+  },
+  {
+    "role": "user",
+    "content": "make a list of all my previous messages",
+    "time": "2025-12-17T07:00:14.134419"
+  },
+  {
+    "role": "assistant",
+    "content": "Here’s a quick rundown of everything you’ve sent so far:\n\n- “hi”\n- “hi”\n- “I am having career anxiety”\n- “I am having career anxiety”\n- “I am having career anxiety”\n- “make a list of all my previous messages”",
+    "time": "2025-12-17T07:00:15.580628"
+  },
+  {
+    "role": "user",
+    "content": "make a list of all my previous messages",
+    "time": "2025-12-17T07:00:15.592750"
+  },
+  {
+    "role": "assistant",
+    "content": "Here’s a quick rundown of everything you’ve sent so far:\n\n- “hi”\n- “hi”\n- “I am having career anxiety”\n- “I am having career anxiety”\n- “I am having career anxiety”\n- “make a list of all my previous messages”",
+    "time": "2025-12-17T07:00:15.592750"
   },
   {
     "role": "user",
     "content": "hi",
-    "time": "2025-12-14T08:46:05.989307"
+    "time": "2025-12-17T07:04:14.855279"
   },
   {
     "role": "assistant",
-    "content": "Hello! 👋 How can I assist you today?",
-    "time": "2025-12-14T08:46:05.991307"
+    "content": "Hey! I’m here for you—how’s your day going? If you’d like to chat about anything, just let me know.",
+    "time": "2025-12-17T07:04:15.867502"
   },
   {
     "role": "user",
     "content": "hi",
-    "time": "2025-12-14T17:07:56.439036"
+    "time": "2025-12-17T07:04:15.882501"
   },
   {
     "role": "assistant",
-    "content": "Hi there! 🌟 How can I support you today?",
-    "time": "2025-12-14T17:07:57.262196"
+    "content": "Hey! I’m here for you—how’s your day going? If you’d like to chat about anything, just let me know.",
+    "time": "2025-12-17T07:04:15.883541"
   }
 ]

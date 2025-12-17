@@ -39,6 +39,10 @@ VECTOR_STORE_PATH = os.path.abspath(
 
 CHAT_HISTORY_PATH = os.path.join(DATA_DIR, "chat_history.json")
 
+# Number of past messages to include from user chat history for RAG context
+# Can be overridden via environment variable `CHAT_HISTORY_WINDOW`
+CHAT_HISTORY_WINDOW = int(os.getenv("CHAT_HISTORY_WINDOW", "10"))
+
 # --------------------------------------------------------
 # ✅ NEW: Chat history folder for per-user chat storage
 # (You requested: "keep code intact and add additional code with comments")

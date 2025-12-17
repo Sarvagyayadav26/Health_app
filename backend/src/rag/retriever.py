@@ -1,3 +1,6 @@
+import re
+
+
 class Retriever:
     def __init__(self, embedder, vector_store):
         self.embedder = embedder
@@ -23,8 +26,9 @@ class Retriever:
                 if topic_lower in query_lower:
                     matches = True
                     break
-                # Check if any word from topic is in query
-                topic_words = set(topic_lower.split())
+
+                # Break topic into alphanumeric tokens (handles hyphens, underscores, punctuation)
+                topic_words = set(re.findall(r"\w+", topic_lower))
                 if topic_words & query_words:  # Intersection of sets
                     matches = True
                     break

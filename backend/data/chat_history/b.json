@@ -2,181 +2,41 @@
   {
     "role": "user",
     "content": "hi",
-    "time": "2025-12-13T04:08:48.133244"
+    "time": "2025-12-17T08:46:26.196155"
   },
   {
     "role": "assistant",
-    "content": "Hello! How can I help you today?",
-    "time": "2025-12-13T04:08:48.134256"
+    "content": "Hey there! How’s it going? If there’s anything on your mind, I’m here to listen.",
+    "time": "2025-12-17T08:46:27.097461"
+  },
+  {
+    "role": "user",
+    "content": "hlo",
+    "time": "2025-12-17T08:46:32.805707"
+  },
+  {
+    "role": "assistant",
+    "content": "Hey! How can I help you today?",
+    "time": "2025-12-17T08:46:33.447340"
   },
   {
     "role": "user",
     "content": "hi",
-    "time": "2025-12-13T04:09:01.030311"
+    "time": "2025-12-17T08:51:16.033213"
   },
   {
     "role": "assistant",
-    "content": "Hey there! How can I help you today?",
-    "time": "2025-12-13T04:09:01.032344"
+    "content": "Hey! I’m here for you—what’s on your mind today?",
+    "time": "2025-12-17T08:51:16.957459"
   },
   {
     "role": "user",
     "content": "hi",
-    "time": "2025-12-13T04:15:18.743281"
+    "time": "2025-12-17T08:51:19.482094"
   },
   {
     "role": "assistant",
-    "content": "Hello! How can I help you today?",
-    "time": "2025-12-13T04:15:18.743281"
-  },
-  {
-    "role": "user",
-    "content": "hi",
-    "time": "2025-12-13T04:15:25.513078"
-  },
-  {
-    "role": "assistant",
-    "content": "Hello! 👋 How can I help you today?",
-    "time": "2025-12-13T04:15:25.515077"
-  },
-  {
-    "role": "user",
-    "content": "hi",
-    "time": "2025-12-13T04:17:52.854859"
-  },
-  {
-    "role": "assistant",
-    "content": "Hello! How can I help you today?",
-    "time": "2025-12-13T04:17:52.855857"
-  },
-  {
-    "role": "user",
-    "content": "hi",
-    "time": "2025-12-13T04:18:07.431490"
-  },
-  {
-    "role": "assistant",
-    "content": "Hello! 👋 How can I help you today?",
-    "time": "2025-12-13T04:18:07.432490"
-  },
-  {
-    "role": "user",
-    "content": "hi",
-    "time": "2025-12-13T04:35:47.482978"
-  },
-  {
-    "role": "assistant",
-    "content": "Hello! 👋 How can I help you today?",
-    "time": "2025-12-13T04:35:47.484485"
-  },
-  {
-    "role": "user",
-    "content": "hi",
-    "time": "2025-12-13T08:00:19.200931"
-  },
-  {
-    "role": "assistant",
-    "content": "Hello! 👋 How can I help you today?",
-    "time": "2025-12-13T08:00:19.202933"
-  },
-  {
-    "role": "user",
-    "content": "hi",
-    "time": "2025-12-13T08:00:52.960226"
-  },
-  {
-    "role": "assistant",
-    "content": "Hello! 👋 How can I help you today?",
-    "time": "2025-12-13T08:00:52.962239"
-  },
-  {
-    "role": "user",
-    "content": "hi",
-    "time": "2025-12-13T15:53:15.760025"
-  },
-  {
-    "role": "assistant",
-    "content": "Hello! How can I help you today?",
-    "time": "2025-12-13T15:53:15.761305"
-  },
-  {
-    "role": "user",
-    "content": "hi",
-    "time": "2025-12-13T16:36:01.266343"
-  },
-  {
-    "role": "assistant",
-    "content": "Hello! 👋 How can I assist you today?",
-    "time": "2025-12-13T16:36:01.269396"
-  },
-  {
-    "role": "user",
-    "content": "hi",
-    "time": "2025-12-13T16:36:03.955224"
-  },
-  {
-    "role": "assistant",
-    "content": "Hello! How can I help you today?",
-    "time": "2025-12-13T16:36:03.956224"
-  },
-  {
-    "role": "user",
-    "content": "hi",
-    "time": "2025-12-13T16:36:05.543292"
-  },
-  {
-    "role": "assistant",
-    "content": "Hello! How can I help you today?",
-    "time": "2025-12-13T16:36:05.544295"
-  },
-  {
-    "role": "user",
-    "content": "hi",
-    "time": "2025-12-13T16:36:06.992249"
-  },
-  {
-    "role": "assistant",
-    "content": "Hello! 👋 How can I help you today?",
-    "time": "2025-12-13T16:36:06.993254"
-  },
-  {
-    "role": "user",
-    "content": "hi",
-    "time": "2025-12-13T16:36:08.526382"
-  },
-  {
-    "role": "assistant",
-    "content": "Hello! How can I help you today?",
-    "time": "2025-12-13T16:36:08.528905"
-  },
-  {
-    "role": "user",
-    "content": "hi",
-    "time": "2025-12-13T17:45:58.182788"
-  },
-  {
-    "role": "assistant",
-    "content": "Hello! How can I help you today?",
-    "time": "2025-12-13T17:45:58.184785"
-  },
-  {
-    "role": "user",
-    "content": "hi",
-    "time": "2025-12-14T16:40:15.121283"
-  },
-  {
-    "role": "assistant",
-    "content": "Hey there! How’s it going today?",
-    "time": "2025-12-14T16:40:20.321990"
-  },
-  {
-    "role": "user",
-    "content": "hi",
-    "time": "2025-12-14T17:13:43.362184"
-  },
-  {
-    "role": "assistant",
-    "content": "Hey! How are you feeling today?",
-    "time": "2025-12-14T17:13:44.074780"
+    "content": "Hey there! I’m glad you reached out. How are you feeling today?",
+    "time": "2025-12-17T08:51:20.221279"
   }
 ]
