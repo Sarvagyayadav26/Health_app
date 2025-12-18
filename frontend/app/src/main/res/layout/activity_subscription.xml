@@ -57,6 +57,7 @@
                 android:textColor="#333333" />
 
             <TextView
+                android:id="@+id/starterPackText"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="5 Chats - $1.99"
@@ -65,7 +66,7 @@
                 android:layout_marginTop="8dp" />
 
             <Button
-                android:id="@+id/subscribe5Btn"
+                android:id="@+id/buy5Btn"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:text="Buy 5 Chats"
@@ -98,7 +99,7 @@
                 android:textColor="#333333" />
 
             <TextView
-                android:id="@+id/priceText"
+                android:id="@+id/proPackText"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="10 Chats - $2.99"
@@ -107,7 +108,7 @@
                 android:layout_marginTop="8dp" />
 
             <Button
-                android:id="@+id/subscribeBtn"
+                android:id="@+id/buy10Btn"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:text="Buy 10 Chats"

@@ -1,15 +1,18 @@
 import os
+import logging
 from dotenv import load_dotenv
+
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger("backend")
 
 dotenv_path = ".env"
 
-# Only load .env locally, ignore missing file on Railway
+# Only load `.env` when it exists locally; on hosting platforms
+# environment variables are injected by the platform (e.g. Railway, Render).
 if os.path.exists(dotenv_path):
     load_dotenv(dotenv_path)
 else:
-    print("⚠️ .env file not found — using Railway environment variables")
-
-load_dotenv()
+    logger.info(".env file not found — using hosting environment variables")
 
 # OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
 # OPENAI_MODEL = os.getenv("OPENAI_MODEL", "gpt-4o-mini")

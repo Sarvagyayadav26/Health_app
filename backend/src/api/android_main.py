@@ -29,18 +29,18 @@ INITIALIZED = threading.Event()
 logger = logging.getLogger("backend")
 
 def init_rag():
-    print("🔄 Initializing RAG pipeline...")
+    logger.info("🔄 Initializing RAG pipeline...")
 
     embedder = Embedder()
     store = InMemoryVectorStore()
     vs_path = config.VECTOR_STORE_PATH
 
     if os.path.exists(vs_path):
-        print(f"🔍 Found vector store at: {vs_path}")
+        logger.info(f"Found vector store at: {vs_path}")
         store.load(vs_path)
-        print(f"✅ Loaded vector store with {len(store.ids)} documents.")
+        logger.info(f"Loaded vector store with {len(store.ids)} documents.")
     else:
-        print("📚 No vector store found — building index...")
+        logger.info("No vector store found — building index...")
         docs = load_text_documents(config.DOCS_DIR)
         indexer = Indexer(embedder, store)
         indexer.index_documents(docs)
@@ -65,8 +65,7 @@ def initialize_all():
     # Do not initialize ChatHistory at startup without a user email.
     chat_history = None
 
-    print("✅ All components initialized!")
-
+    logger.info("All components initialized")
     # Signal that initialization is complete so request threads can proceed
     try:
         INITIALIZED.set()

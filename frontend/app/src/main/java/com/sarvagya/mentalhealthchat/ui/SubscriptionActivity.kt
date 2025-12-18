@@ -12,8 +12,10 @@ import com.sarvagya.mentalhealthchat.R
 class SubscriptionActivity : AppCompatActivity() {
 
     private lateinit var billingClient: BillingClient
-    private lateinit var subscribeBtn: Button
-    private lateinit var priceText: TextView
+    private lateinit var buy5Btn: Button
+    private lateinit var buy10Btn: Button
+    private lateinit var starterPackText: TextView
+    private lateinit var proPackText: TextView
     private lateinit var statusText: TextView
 
     // Define your product IDs (you'll create these in Google Play Console)
@@ -24,8 +26,10 @@ class SubscriptionActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_subscription)
 
-        subscribeBtn = findViewById(R.id.subscribeBtn)
-        priceText = findViewById(R.id.priceText)
+        buy5Btn = findViewById(R.id.buy5Btn)
+        buy10Btn = findViewById(R.id.buy10Btn)
+        starterPackText = findViewById(R.id.starterPackText)
+        proPackText = findViewById(R.id.proPackText)
         statusText = findViewById(R.id.statusText)
 
         // Show remaining chats if passed via Intent, otherwise fall back to cached value
@@ -129,14 +133,25 @@ class SubscriptionActivity : AppCompatActivity() {
     }
 
     private fun displayProducts(products: List<ProductDetails>) {
-        // Display first product (5 chats) as example
-        val product = products.firstOrNull()
-        if (product != null) {
-            val price = product.oneTimePurchaseOfferDetails?.formattedPrice ?: "Check price"
-            priceText.text = "5 Chats - $price"
-            
-            subscribeBtn.setOnClickListener {
-                launchPurchaseFlow(product)
+        // Find both products by ID
+        val fiveChats = products.find { it.productId == PRODUCT_ID_5_CHATS }
+        val tenChats = products.find { it.productId == PRODUCT_ID_10_CHATS }
+
+        // Update UI for 5 chats pack
+        if (fiveChats != null) {
+            val price = fiveChats.oneTimePurchaseOfferDetails?.formattedPrice ?: "Check price"
+            starterPackText.text = "5 Chats - $price"
+            buy5Btn.setOnClickListener {
+                launchPurchaseFlow(fiveChats)
+            }
+        }
+
+        // Update UI for 10 chats pack
+        if (tenChats != null) {
+            val price = tenChats.oneTimePurchaseOfferDetails?.formattedPrice ?: "Check price"
+            proPackText.text = "10 Chats - $price"
+            buy10Btn.setOnClickListener {
+                launchPurchaseFlow(tenChats)
             }
         }
     }
@@ -176,7 +191,9 @@ class SubscriptionActivity : AppCompatActivity() {
         billingClient.acknowledgePurchase(acknowledgePurchaseParams) { billingResult ->
             if (billingResult.responseCode == BillingClient.BillingResponseCode.OK) {
                 Toast.makeText(this, "Purchase successful!", Toast.LENGTH_SHORT).show()
-                finish() // Go back to chat
+                // Refresh product info to ensure UI is up-to-date
+                queryProducts()
+                refreshStatus()
             }
         }
     }

@@ -18,6 +18,7 @@ from typing import Optional, Union
 import time
 import logging
 import bcrypt
+from sqlite3 import IntegrityError
 import sqlite3
 
 from src.storage.chat_history import ChatHistory
@@ -155,17 +156,36 @@ class LoginRequest(BaseModel):
 async def register(req: RegisterRequest):
     """Register a new user"""
     try:
-        if get_user(req.email):
-            if DEPLOYMENT_MODE == "android":
-                return {
-                    "success": "User already exists, continue your healing",
-                    "error": None
-                }
-            else:
-                return JSONResponse({"error": "User already exists"}, status_code=400)
-        
-        create_user(req.email, req.age, req.sex, req.password)
-        
+        email = req.email.strip().lower()
+        existing = get_user(email)
+        logger.debug("Register attempt for email=%s", req.email)
+        if existing:
+            # Explicitly reject registration when the user already exists.
+            err = {"error": "User already exists. Please login."}
+            logger.info("Registration blocked - user exists: %s", req.email)
+            if DEPLOYMENT_MODE == "testing":
+                return JSONResponse(err, status_code=409)
+            return err
+
+        try:
+            create_user(email, req.age, req.sex, req.password)
+            logger.info("User created: %s", req.email)
+        except IntegrityError:
+            logger.warning("Duplicate registration attempt (race): %s", req.email)
+            err = {"error": "User already exists. Please login."}
+            if DEPLOYMENT_MODE == "testing":
+                return JSONResponse(err, status_code=409)
+            return err
+        except ValueError as ve:
+            # create_user raises ValueError("user_exists") on duplicate
+            if str(ve) == "user_exists":
+                logger.warning("Duplicate registration attempt: %s", req.email)
+                err = {"error": "User already exists. Please login."}
+                if DEPLOYMENT_MODE == "testing":
+                    return JSONResponse(err, status_code=409)
+                return err
+            raise
+
         if DEPLOYMENT_MODE == "android":
             return {
                 "success": "New User Created",
@@ -174,8 +194,9 @@ async def register(req: RegisterRequest):
             }
         else:
             return JSONResponse({"success": "User registered", "chats": 2})
-    
+
     except Exception as e:
+        logger.exception("Register error for %s: %s", req.email, e)
         if DEPLOYMENT_MODE == "android":
             return {"success": None, "error": str(e)}
         else:
@@ -185,9 +206,8 @@ async def register(req: RegisterRequest):
 async def login(req: LoginRequest):
     """Login user and return usage statistics"""
     try:
-        # 🟡 Android: Strip and lowercase email
-        email = req.email.strip().lower() if DEPLOYMENT_MODE == "android" else req.email
-        
+        # Normalize email for login to match stored values
+        email = req.email.strip().lower()
         user = get_user(email)
         
         if not user:
@@ -284,7 +304,7 @@ async def chat(req: ChatRequest):
     try:
         usage_total = int(usage_total) if usage_total else 0
         chats = int(chats) if chats else 0
-    except:
+    except Exception:
         usage_total = 0
         chats = 0
     
@@ -521,7 +541,7 @@ async def verify_purchase(req: dict):
     product_chats = {
     "mental_health_5_chats_v1": 5,
     "mental_health_10_chats_v1": 10,
-        "mental_health_5_chats": 5,
+    "mental_health_5_chats": 5,
     "mental_health_10_chats": 10,
 }
     
@@ -606,7 +626,7 @@ def get_purchase_options():
         "success": True,
         "options": [
             {
-                "id": "mental_health_5_chats",
+                "id": "mental_health_5_chats_v1",
                 "name": "5 Chats",
                 "description": "Get 5 additional chats",
                 "chats": 5,
@@ -614,7 +634,7 @@ def get_purchase_options():
                 "price_usd": 0.99
             },
             {
-                "id": "mental_health_10_chats",
+                "id": "mental_health_10_chats_v1",
                 "name": "10 Chats",
                 "description": "Get 10 additional chats",
                 "chats": 10,
@@ -764,6 +784,14 @@ async def get_chat_history_messages(request: dict):
         "messages": formatted_messages,
         "count": len(formatted_messages)
     }
+@app.get("/healthz")
+def healthz():
+    return {"ok": True}
+
+@app.get("/")
+def root():
+    return "ok"
+
 
 # ======================================================================
 # MAIN ENTRY POINT
@@ -775,4 +803,4 @@ if __name__ == "__main__":
     port = 8001 if DEPLOYMENT_MODE == "android" else 8000
     
     logger.info(f"🚀 Starting {DEPLOYMENT_MODE.upper()} server on port {port}...")
-    uvicorn.run("src.api.s:app", host="0.0.0.0", port=port, reload=False)
+    # uvicorn.run("src.api.s:app", host="0.0.0.0", port=port, reload=False)

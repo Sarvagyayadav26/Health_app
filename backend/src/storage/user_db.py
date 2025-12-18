@@ -47,30 +47,34 @@ def init_db():
     conn.close()
 
 
-def _normalize_email(e):
-    try:
-        return e.strip().lower() if isinstance(e, str) else e
-    except Exception:
-        return e
-    
 def create_user(email: str, age: int, sex: str, password: str):
-    email = _normalize_email(email)
+    # Do NOT normalize email here; preserve the exact value provided by the client.
+    def _normalize_email(e):
+        try:
+            return e.strip().lower() if isinstance(e, str) else e
+        except Exception:
+            return e
     conn = sqlite3.connect(DB_PATH)
     cursor = conn.cursor()
 
     hashed = bcrypt.hashpw(password.encode(), bcrypt.gensalt()).decode()
 
-    cursor.execute("""
-        INSERT INTO users (email, age, sex, password_hash, usage_count, chats)
-        VALUES (?, ?, ?, ?, 0, 5)
-    """, (email, age, sex, hashed))
-
-    conn.commit()
-    conn.close()
-    logger.info("%s: User created", email)
+    try:
+        cursor.execute("""
+            INSERT INTO users (email, age, sex, password_hash, usage_count, chats)
+            VALUES (?, ?, ?, ?, 0, 5)
+        """, (email, age, sex, hashed))
+        conn.commit()
+        logger.info("%s: User created", email)
+    except sqlite3.IntegrityError:
+        # Re-raise as a ValueError so callers can handle duplicate-user cases cleanly
+        conn.rollback()
+        raise ValueError("user_exists")
+    finally:
+        conn.close()
 
 def get_user(email: str):
-    email = _normalize_email(email)
+    # Preserve email as provided; do not normalize
     conn = sqlite3.connect(DB_PATH)
     cursor = conn.cursor()
 
@@ -88,7 +92,6 @@ def get_user(email: str):
 
 def save_message(email: str, role: str, content: str, session_id: int = 1):
     # print(f"[DEBUG] save_message called - Email: {email}, Session: {session_id}, Role: {role}, Content: {content}")
-    email = _normalize_email(email)
     conn = sqlite3.connect(DB_PATH)
     cursor = conn.cursor()
     cursor.execute("""
@@ -102,10 +105,13 @@ def save_message(email: str, role: str, content: str, session_id: int = 1):
 
 
 def get_messages(email: str, limit: int = 10, session_id: int = 1):
-    email = _normalize_email(email)
+    # Do not normalize email
     conn = sqlite3.connect(DB_PATH)
     cursor = conn.cursor()
     cursor.execute("""
+        def save_message(email: str, role: str, content: str, session_id: int = 1):
+            # print(f"[DEBUG] save_message called - Email: {email}, Session: {session_id}, Role: {role}, Content: {content}")
+            email = _normalize_email(email)
         SELECT role, content, timestamp
         FROM messages
         WHERE email = ? AND session_id = ?
@@ -128,8 +134,6 @@ def get_messages(email: str, limit: int = 10, session_id: int = 1):
 
 def increment_usage(email):
     # print("DEBUG: increment_usage param =", email, type(email))
-
-    email = _normalize_email(email)
     conn = sqlite3.connect(DB_PATH)
     cursor = conn.cursor()
 
@@ -141,7 +145,7 @@ def increment_usage(email):
     conn.close()
 
 def get_usage(email):
-    email = _normalize_email(email)
+    # Preserve email as provided
     conn = sqlite3.connect(DB_PATH)
     cursor = conn.cursor()
 
@@ -156,7 +160,7 @@ def get_usage(email):
 
 def get_usage_stats(email):
     """Get usage statistics for a user"""
-    email = _normalize_email(email)
+    # Preserve email as provided
     conn = sqlite3.connect(DB_PATH)
     cursor = conn.cursor()
 
@@ -186,7 +190,7 @@ def add_chats(email, chats):
         chats: Number of chats to add
     """
     logger.info("Adding %s chats to %s", chats, email)
-    email = _normalize_email(email)
+    # Preserve email as provided
     conn = sqlite3.connect(DB_PATH)
     cursor = conn.cursor()
 
