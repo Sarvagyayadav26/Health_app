@@ -33,8 +33,7 @@ class SubscriptionTestActivity : AppCompatActivity() {
         val backBtn = findViewById<Button>(R.id.backBtn)
         backBtn.setOnClickListener { finish() }
 
-        // Display test pricing
-        proPackText.text = "10 Chats - $2.99"
+        // Display test pricing (hardcoded label removed; pricing will come from layout or product/backend data)
 
         // Check for remaining chats from Intent
         val remaining = intent.getIntExtra("CHATS", -1)

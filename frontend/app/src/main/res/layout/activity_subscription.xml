@@ -60,7 +60,7 @@
                 android:id="@+id/starterPackText"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="5 Chats - $1.99"
+                android:text="5 Chats - ₹49"
                 android:textSize="16sp"
                 android:textColor="#666666"
                 android:layout_marginTop="8dp" />
@@ -102,7 +102,7 @@
                 android:id="@+id/proPackText"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="10 Chats - $2.99"
+                android:text="10 Chats - ₹99"
                 android:textSize="16sp"
                 android:textColor="#666666"
                 android:layout_marginTop="8dp" />

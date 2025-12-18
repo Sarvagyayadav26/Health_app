@@ -320,8 +320,8 @@ class ReliefChatActivity : AppCompatActivity() {
     }
     
     private fun openSubscription() {
-                // val intent = Intent(this, SubscriptionTestActivity::class.java)
-                val intent = Intent(this, SubscriptionActivity::class.java)
+                 val intent = Intent(this, SubscriptionTestActivity::class.java)
+//                val intent = Intent(this, SubscriptionActivity::class.java)
                 intent.putExtra("CHATS", currentRemainingChats)
                 startActivity(intent)
     }
