@@ -16,25 +16,25 @@ import retrofit2.Response
  */
 class SubscriptionTestActivity : AppCompatActivity() {
 
-    private lateinit var subscribeBtn: Button
-    private lateinit var subscribe5Btn: Button
-    private lateinit var priceText: TextView
+    private lateinit var buy10Btn: Button
+    private lateinit var buy5Btn: Button
+    private lateinit var proPackText: TextView
     private lateinit var statusText: TextView
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_subscription)
 
-        subscribeBtn = findViewById(R.id.subscribeBtn)
-        subscribe5Btn = findViewById(R.id.subscribe5Btn)
-        priceText = findViewById(R.id.priceText)
+        buy10Btn = findViewById(R.id.buy10Btn)
+        buy5Btn = findViewById(R.id.buy5Btn)
+        proPackText = findViewById(R.id.proPackText)
         statusText = findViewById(R.id.statusText)
 
         val backBtn = findViewById<Button>(R.id.backBtn)
         backBtn.setOnClickListener { finish() }
 
         // Display test pricing
-        priceText.text = "10 Chats - $2.99"
+        proPackText.text = "10 Chats - $2.99"
 
         // Check for remaining chats from Intent
         val remaining = intent.getIntExtra("CHATS", -1)
@@ -45,12 +45,12 @@ class SubscriptionTestActivity : AppCompatActivity() {
         }
 
         // Buy 10 chats
-        subscribeBtn.setOnClickListener {
+        buy10Btn.setOnClickListener {
             performTestPurchase("mental_health_10_chats")
         }
         
         // Buy 5 chats
-        subscribe5Btn.setOnClickListener {
+        buy5Btn.setOnClickListener {
             performTestPurchase("mental_health_5_chats")
         }
     }

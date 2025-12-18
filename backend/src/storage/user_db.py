@@ -108,16 +108,16 @@ def get_messages(email: str, limit: int = 10, session_id: int = 1):
     # Do not normalize email
     conn = sqlite3.connect(DB_PATH)
     cursor = conn.cursor()
-    cursor.execute("""
-        def save_message(email: str, role: str, content: str, session_id: int = 1):
-            # print(f"[DEBUG] save_message called - Email: {email}, Session: {session_id}, Role: {role}, Content: {content}")
-            email = _normalize_email(email)
+    cursor.execute(
+        """
         SELECT role, content, timestamp
         FROM messages
         WHERE email = ? AND session_id = ?
         ORDER BY id DESC
-        LIMIT ?;
-    """, (email, session_id, limit))
+        LIMIT ?
+        """,
+        (email, session_id, limit)
+    )
     rows = cursor.fetchall()
     # Debug logging: count and (optionally) rows when debug enabled
     try:

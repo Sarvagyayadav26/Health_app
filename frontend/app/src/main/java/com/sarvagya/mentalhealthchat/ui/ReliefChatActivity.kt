@@ -22,7 +22,7 @@ class ReliefChatActivity : AppCompatActivity() {
     private lateinit var inputBox: EditText
     private lateinit var sendBtn: Button
     private lateinit var scrollView: ScrollView
-    private lateinit var subscribeBtn: Button
+    private lateinit var buy10Btn: Button
     private lateinit var chatsBtn: Button
     private lateinit var chatsHistoryBtn: Button
     private lateinit var closeHistoryBtn: Button
@@ -40,14 +40,14 @@ class ReliefChatActivity : AppCompatActivity() {
         inputBox = findViewById(R.id.inputBox)
         sendBtn = findViewById(R.id.sendBtn)
         scrollView = findViewById(R.id.chatScroll)
-        subscribeBtn = findViewById(R.id.subscribeBtn)
+        buy10Btn = findViewById(R.id.buy10Btn)
         chatsBtn = findViewById(R.id.chatsBtn)
         chatsHistoryBtn = findViewById(R.id.chatsHistoryBtn)
         closeHistoryBtn = findViewById(R.id.closeHistoryBtn)
 
         val backBtn = findViewById<Button>(R.id.backBtn)
         backBtn.setOnClickListener { finish() }
-        subscribeBtn.visibility = View.GONE
+        buy10Btn.visibility = View.GONE
 
         // Get email from shared preferences FIRST
         val email = getSharedPreferences("app", MODE_PRIVATE)
@@ -59,7 +59,7 @@ class ReliefChatActivity : AppCompatActivity() {
             return
         }
 
-        subscribeBtn.setOnClickListener {
+        buy10Btn.setOnClickListener {
             openSubscription()
         }
 
@@ -110,7 +110,7 @@ class ReliefChatActivity : AppCompatActivity() {
                         android.util.Log.d("ReliefChat", "❌ Response failed: ${response.code()}")
                         chatBox.append("\nBot: You've used all your chats. Buy more chats to feel better!\n")
                         
-                        subscribeBtn.visibility = View.VISIBLE
+                        buy10Btn.visibility = View.VISIBLE
                         chatsBtn.text = "Chats: 0"
                         
                         Toast.makeText(
@@ -133,7 +133,7 @@ class ReliefChatActivity : AppCompatActivity() {
                         chatBox.append("\nBot: You've used all your free chats. Buy more chats to continue!\n")
                         
                         // Show Subscribe button
-                        subscribeBtn.visibility = View.VISIBLE
+                        buy10Btn.visibility = View.VISIBLE
                         chatsBtn.text = "Chats: 0"
                         
                         Toast.makeText(
@@ -153,14 +153,14 @@ class ReliefChatActivity : AppCompatActivity() {
                         
                         // Show purchase button if this was the last chat
                         if (remainingChats == 0) {
-                            subscribeBtn.visibility = View.VISIBLE
+                            buy10Btn.visibility = View.VISIBLE
                             Toast.makeText(
                                 this@ReliefChatActivity,
                                 "You've used all your chats! Buy more to feel better.",
                                 Toast.LENGTH_LONG
                             ).show()
                         } else {
-                            subscribeBtn.visibility = View.GONE
+                            buy10Btn.visibility = View.GONE
                         }
                         
                         chatBox.append("\nBot: $reply\n")
@@ -232,7 +232,7 @@ class ReliefChatActivity : AppCompatActivity() {
         // Hide other header buttons so only Close history remains
         chatsHistoryBtn.visibility = View.GONE
         chatsBtn.visibility = View.GONE
-        subscribeBtn.visibility = View.GONE
+        buy10Btn.visibility = View.GONE
         try {
             findViewById<Button>(R.id.backBtn).visibility = View.GONE
         } catch (e: Exception) {
@@ -310,7 +310,7 @@ class ReliefChatActivity : AppCompatActivity() {
             // fall back to cached value in shared prefs
             remaining = getSharedPreferences("app", MODE_PRIVATE).getInt("chats", 5)
         }
-        subscribeBtn.visibility = if (remaining <= 0) View.VISIBLE else View.GONE
+        buy10Btn.visibility = if (remaining <= 0) View.VISIBLE else View.GONE
         try {
             findViewById<Button>(R.id.backBtn).visibility = View.VISIBLE
         } catch (e: Exception) {
@@ -355,7 +355,7 @@ class ReliefChatActivity : AppCompatActivity() {
                         chatsBtn.text = "Chats: $purchasedChats"
                         currentRemainingChats = purchasedChats
                         // Update subscribe button visibility based on remaining chats
-                        subscribeBtn.visibility = if (purchasedChats <= 0) View.VISIBLE else View.GONE
+                        buy10Btn.visibility = if (purchasedChats <= 0) View.VISIBLE else View.GONE
                         // Cache value
                         getSharedPreferences("app", MODE_PRIVATE)
                             .edit()
@@ -367,7 +367,7 @@ class ReliefChatActivity : AppCompatActivity() {
                         val defaultChats = 5
                         chatsBtn.text = "Chats: $defaultChats"
                         currentRemainingChats = defaultChats
-                        subscribeBtn.visibility = View.GONE
+                        buy10Btn.visibility = View.GONE
                 }
             }
             
@@ -376,7 +376,7 @@ class ReliefChatActivity : AppCompatActivity() {
                 val defaultChats = 5
                 chatsBtn.text = "Chats: $defaultChats"
                 currentRemainingChats = defaultChats
-                subscribeBtn.visibility = View.GONE
+                buy10Btn.visibility = View.GONE
             }
         })
     }

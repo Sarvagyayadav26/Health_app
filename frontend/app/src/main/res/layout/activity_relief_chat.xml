@@ -119,7 +119,7 @@
     <!-- Subscribe Button (Initially Hidden) -->
     <!-- Added for billing integration -->
     <Button
-        android:id="@+id/subscribeBtn"
+        android:id="@+id/buy10Btn"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:text="Buy More Chats"

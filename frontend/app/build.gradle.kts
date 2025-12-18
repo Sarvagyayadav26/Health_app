@@ -11,7 +11,7 @@ android {
         applicationId = "com.sarvagya.mentalhealthchat"
         minSdk = 24
         targetSdk = 35
-        versionCode = 21
+        versionCode = 22
         versionName = "sarvagya_1.4"
     }
 
