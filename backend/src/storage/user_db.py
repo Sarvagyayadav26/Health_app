@@ -10,6 +10,12 @@ logger = logging.getLogger("backend")
 # DB_PATH = os.path.join(os.path.dirname(__file__), "user_data.db")
 DB_PATH = "/var/data/user_data.db"
 
+print("DB PATH:", DB_PATH)
+print("DIR EXISTS:", os.path.exists("/var/data"))
+os.makedirs("/var/data", exist_ok=True)
+
+print("DIR EXISTS (after):", os.path.exists("/var/data"))
+
 def init_db():
     conn = sqlite3.connect(DB_PATH)
     cursor = conn.cursor()
