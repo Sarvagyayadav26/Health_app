@@ -1,13 +1,19 @@
 package com.sarvagya.mentalhealthchat.ui
 
 import android.os.Bundle
+import android.util.Log
 import android.widget.Button
 import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import com.android.billingclient.api.*
 import com.sarvagya.mentalhealthchat.R
-
+import com.sarvagya.mentalhealthchat.ui.RetrofitClient
+import com.sarvagya.mentalhealthchat.ui.GrantChatsRequest
+import com.sarvagya.mentalhealthchat.ui.GrantChatsResponse
+import retrofit2.Call
+import retrofit2.Callback
+import retrofit2.Response
 
 class SubscriptionActivity : AppCompatActivity() {
 
@@ -18,8 +24,13 @@ class SubscriptionActivity : AppCompatActivity() {
     private lateinit var proPackText: TextView
     private lateinit var statusText: TextView
 
-    private val PRODUCT_ID_5_CHATS = "mental_health_5_chats_v1"
-    private val PRODUCT_ID_10_CHATS = "mental_health_10_chats_v1"
+    // Use a map to safely store and retrieve product details
+    private val productDetailsMap = mutableMapOf<String, ProductDetails>()
+
+    companion object {
+        const val PRODUCT_ID_5 = "mental_health_5_chats_v1"
+        const val PRODUCT_ID_10 = "mental_health_10_chats_v1"
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -31,133 +42,198 @@ class SubscriptionActivity : AppCompatActivity() {
         proPackText = findViewById(R.id.proPackText)
         statusText = findViewById(R.id.statusText)
 
-        // ✅ Disable ONCE here
-        buy5Btn.isEnabled = false
-        buy10Btn.isEnabled = false
-
-        buy5Btn.setOnClickListener {
-            Toast.makeText(this, "Loading products…", Toast.LENGTH_SHORT).show()
-        }
-        buy10Btn.setOnClickListener {
-            Toast.makeText(this, "Loading products…", Toast.LENGTH_SHORT).show()
-        }
-
+        disableButtons()
         findViewById<Button>(R.id.backBtn).setOnClickListener { finish() }
 
-        setupBillingClient()
-        refreshStatus()
+        setupBilling()
+        refreshStatus() // Initial status refresh
     }
 
-    private fun setupBillingClient() {
+    // ---------- Billing setup ----------
+    private fun setupBilling() {
         billingClient = BillingClient.newBuilder(this)
-            .setListener { billingResult, purchases ->
-                if (billingResult.responseCode == BillingClient.BillingResponseCode.OK && purchases != null) {
+            .enablePendingPurchases()
+            .setListener { result, purchases ->
+                if (result.responseCode == BillingClient.BillingResponseCode.OK && purchases != null) {
                     handlePurchases(purchases)
                 }
             }
-            .enablePendingPurchases()
             .build()
 
         billingClient.startConnection(object : BillingClientStateListener {
-            override fun onBillingSetupFinished(billingResult: BillingResult) {
-                if (billingResult.responseCode == BillingClient.BillingResponseCode.OK) {
+            override fun onBillingSetupFinished(result: BillingResult) {
+                Log.d("BILLING", "setup=${result.responseCode}")
+                if (result.responseCode == BillingClient.BillingResponseCode.OK) {
                     queryProducts()
                 }
             }
 
-            override fun onBillingServiceDisconnected() {}
+            override fun onBillingServiceDisconnected() {
+                Log.d("BILLING", "service disconnected, retrying...")
+                // Implement a retry mechanism if needed
+            }
         })
     }
 
+    // ---------- Query products ----------
     private fun queryProducts() {
-        val products = listOf(
+        val productList = listOf(
             QueryProductDetailsParams.Product.newBuilder()
-                .setProductId(PRODUCT_ID_5_CHATS)
+                .setProductId(PRODUCT_ID_5)
                 .setProductType(BillingClient.ProductType.INAPP)
                 .build(),
             QueryProductDetailsParams.Product.newBuilder()
-                .setProductId(PRODUCT_ID_10_CHATS)
+                .setProductId(PRODUCT_ID_10)
                 .setProductType(BillingClient.ProductType.INAPP)
                 .build()
         )
+        val params = QueryProductDetailsParams.newBuilder().setProductList(productList).build()
 
-        val params = QueryProductDetailsParams.newBuilder()
-            .setProductList(products)
-            .build()
-
-        billingClient.queryProductDetailsAsync(params) { _, productDetailsList ->
-            if (productDetailsList.isNotEmpty()) {
-                displayProducts(productDetailsList)
+        // **FIXED**: Correctly call queryProductDetailsAsync with a listener
+        billingClient.queryProductDetailsAsync(params) { billingResult, productDetailsList ->
+            if (billingResult.responseCode == BillingClient.BillingResponseCode.OK) {
+                // **FIXED**: Ensure UI updates happen on the main thread
+                runOnUiThread {
+                    displayProducts(productDetailsList)
+                }
+            } else {
+                Log.e("BILLING", "Query failed: ${billingResult.debugMessage}")
             }
         }
     }
 
+
     private fun displayProducts(products: List<ProductDetails>) {
-
-        val fiveChats = products.find { it.productId == PRODUCT_ID_5_CHATS }
-        val tenChats = products.find { it.productId == PRODUCT_ID_10_CHATS }
-
-        // ✅ 5 chats
-        fiveChats?.oneTimePurchaseOfferDetails?.formattedPrice?.let { price ->
-            starterPackText.text = "5 Chats - $price"
-            buy5Btn.isEnabled = true
-            buy5Btn.setOnClickListener { launchPurchaseFlow(fiveChats) }
+        if (products.isEmpty()) {
+            Log.w("BILLING", "No products found to display.")
+            return
         }
 
-        // ✅ 10 chats (FIXED TextView)
-        tenChats?.oneTimePurchaseOfferDetails?.formattedPrice?.let { price ->
-            proPackText.text = "10 Chats - $price"
-            buy10Btn.isEnabled = true
-            buy10Btn.setOnClickListener { launchPurchaseFlow(tenChats) }
+        products.forEach { product ->
+            productDetailsMap[product.productId] = product // Store for later
+            when (product.productId) {
+                PRODUCT_ID_5 -> {
+                    val price = product.oneTimePurchaseOfferDetails?.formattedPrice
+                    starterPackText.text = if (price != null) "5 Chats - $price" else "5 Chats"
+                    enableButton(buy5Btn) { launchPurchase(product) }
+                }
+
+                PRODUCT_ID_10 -> {
+                    val price = product.oneTimePurchaseOfferDetails?.formattedPrice
+                    proPackText.text = if (price != null) "10 Chats - $price" else "10 Chats"
+                    enableButton(buy10Btn) { launchPurchase(product) }
+                }
+            }
         }
     }
 
-    private fun launchPurchaseFlow(productDetails: ProductDetails) {
-        buy5Btn.isEnabled = false
-        buy10Btn.isEnabled = false
+    private fun enableButton(btn: Button, action: () -> Unit) {
+        btn.isEnabled = true
+        btn.alpha = 1f
+        btn.setOnClickListener { action() }
+    }
+
+    // ---------- Purchase ----------
+    private fun launchPurchase(product: ProductDetails) {
+        disableButtons() // Prevent multiple clicks
 
         val params = BillingFlowParams.newBuilder()
             .setProductDetailsParamsList(
                 listOf(
-                    BillingFlowParams.ProductDetailsParams
-                        .newBuilder()
-                        .setProductDetails(productDetails)
-                        .build()
+                    BillingFlowParams.ProductDetailsParams.newBuilder().setProductDetails(product).build()
                 )
             )
             .build()
-
         billingClient.launchBillingFlow(this, params)
     }
 
+    // ---------- Handle purchase (MAJOR FIX) ----------
     private fun handlePurchases(purchases: List<Purchase>) {
         purchases.forEach { purchase ->
             if (purchase.purchaseState == Purchase.PurchaseState.PURCHASED && !purchase.isAcknowledged) {
-                acknowledgePurchase(purchase)
+                val chatsToAdd = when {
+                    purchase.products.contains(PRODUCT_ID_5) -> 5
+                    purchase.products.contains(PRODUCT_ID_10) -> 10
+                    else -> 0
+                }
+                if (chatsToAdd > 0) {
+                    grantChatsOnBackend(purchase, chatsToAdd)
+                }
             }
         }
     }
 
+    // **NEW**: Function to call your backend before acknowledging
+    private fun grantChatsOnBackend(purchase: Purchase, chatsToAdd: Int) {
+        val email = getSharedPreferences("app", MODE_PRIVATE).getString("email", null)
+        if (email == null) {
+            Toast.makeText(this, "Error: User not logged in.", Toast.LENGTH_LONG).show()
+            return
+        }
+
+        val request = GrantChatsRequest(email, chatsToAdd, purchase.purchaseToken)
+        RetrofitClient.instance.grantChats(request).enqueue(object : Callback<GrantChatsResponse> {
+            override fun onResponse(call: Call<GrantChatsResponse>, response: Response<GrantChatsResponse>) {
+                if (response.isSuccessful && response.body()?.success == true) {
+                    // Backend confirmed, now acknowledge the purchase with Google
+                    acknowledgePurchase(purchase)
+                    // **FIXED**: Update SharedPreferences with new total from server
+                    val newTotal = response.body()?.newChatCount
+                    if (newTotal != null) {
+                        getSharedPreferences("app", MODE_PRIVATE).edit().putInt("chats", newTotal).apply()
+                    }
+                } else {
+                    Log.e("BILLING", "Backend failed to grant chats. Purchase will not be acknowledged.")
+                    Toast.makeText(this@SubscriptionActivity, "Server error. Please try again.", Toast.LENGTH_LONG).show()
+                    enableButtonsAfterFailure() // Re-enable buttons so user can retry
+                }
+            }
+
+            override fun onFailure(call: Call<GrantChatsResponse>, t: Throwable) {
+                Log.e("BILLING", "Network error while granting chats.", t)
+                Toast.makeText(this@SubscriptionActivity, "Network error. Please try again.", Toast.LENGTH_LONG).show()
+                enableButtonsAfterFailure() // Re-enable buttons so user can retry
+            }
+        })
+    }
+
+    // **NEW**: Acknowledge purchase only after backend success
     private fun acknowledgePurchase(purchase: Purchase) {
-        billingClient.acknowledgePurchase(
-            AcknowledgePurchaseParams.newBuilder()
-                .setPurchaseToken(purchase.purchaseToken)
-                .build()
-        ) {
-            Toast.makeText(this, "Purchase successful!", Toast.LENGTH_SHORT).show()
-            refreshStatus()
+        val params = AcknowledgePurchaseParams.newBuilder().setPurchaseToken(purchase.purchaseToken).build()
+        billingClient.acknowledgePurchase(params) { billingResult ->
+            if (billingResult.responseCode == BillingClient.BillingResponseCode.OK) {
+                Toast.makeText(this, "Purchase successful!", Toast.LENGTH_SHORT).show()
+                refreshStatus() // Refresh the UI with the new chat count
+            } else {
+                Log.e("BILLING", "Failed to acknowledge purchase: ${billingResult.debugMessage}")
+            }
         }
     }
 
+
+    // ---------- Helpers ----------
+    private fun disableButtons() {
+        buy5Btn.isEnabled = false
+        buy10Btn.isEnabled = false
+        buy5Btn.alpha = 0.5f
+        buy10Btn.alpha = 0.5f
+    }
+
+    // **NEW**: Re-enable buttons if purchase flow fails
+    private fun enableButtonsAfterFailure() {
+        if(productDetailsMap.containsKey(PRODUCT_ID_5)) enableButton(buy5Btn) { launchPurchase(productDetailsMap[PRODUCT_ID_5]!!) }
+        if(productDetailsMap.containsKey(PRODUCT_ID_10)) enableButton(buy10Btn) { launchPurchase(productDetailsMap[PRODUCT_ID_10]!!) }
+    }
+
     private fun refreshStatus() {
-        val chats = getSharedPreferences("app", MODE_PRIVATE).getInt("chats", -1)
-        statusText.text =
-            if (chats > 0) "You have $chats chats remaining"
-            else "You've reached your free chat limit"
+        val chats = getSharedPreferences("app", MODE_PRIVATE).getInt("chats", 0)
+        statusText.text = if (chats > 0) "You have $chats chats remaining" else "You've reached your free chat limit"
     }
 
     override fun onDestroy() {
         super.onDestroy()
-        billingClient.endConnection()
+        if (::billingClient.isInitialized) {
+            billingClient.endConnection()
+        }
     }
 }
