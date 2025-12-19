@@ -9,8 +9,8 @@ import androidx.appcompat.app.AppCompatActivity
 import com.android.billingclient.api.*
 import com.sarvagya.mentalhealthchat.R
 import com.sarvagya.mentalhealthchat.ui.RetrofitClient
-import com.sarvagya.mentalhealthchat.ui.GrantChatsRequest
-import com.sarvagya.mentalhealthchat.ui.GrantChatsResponse
+import com.sarvagya.mentalhealthchat.ui.PurchaseRequest
+import com.sarvagya.mentalhealthchat.ui.PurchaseResponse
 import retrofit2.Call
 import retrofit2.Callback
 import retrofit2.Response
@@ -171,28 +171,39 @@ class SubscriptionActivity : AppCompatActivity() {
             return
         }
 
-        val request = GrantChatsRequest(email, chatsToAdd, purchase.purchaseToken)
-        RetrofitClient.instance.grantChats(request).enqueue(object : Callback<GrantChatsResponse> {
-            override fun onResponse(call: Call<GrantChatsResponse>, response: Response<GrantChatsResponse>) {
+        // Determine product_id from the purchase.products list (supports multi-product purchases)
+        val productId = when {
+            purchase.products.contains(PRODUCT_ID_5) -> PRODUCT_ID_5
+            purchase.products.contains(PRODUCT_ID_10) -> PRODUCT_ID_10
+            else -> null
+        }
+
+        // Build a PurchaseRequest and call `/purchase/verify` on the backend.
+        val req = PurchaseRequest(
+            email = email,
+            purchase_token = purchase.purchaseToken,
+            product_id = productId ?: ""
+        )
+
+        RetrofitClient.instance.verifyPurchase(req).enqueue(object : Callback<PurchaseResponse> {
+            override fun onResponse(call: Call<PurchaseResponse>, response: Response<PurchaseResponse>) {
                 if (response.isSuccessful && response.body()?.success == true) {
-                    // Backend confirmed, now acknowledge the purchase with Google
                     acknowledgePurchase(purchase)
-                    // **FIXED**: Update SharedPreferences with new total from server
-                    val newTotal = response.body()?.newChatCount
+                    val newTotal = response.body()?.remaining_chats
                     if (newTotal != null) {
                         getSharedPreferences("app", MODE_PRIVATE).edit().putInt("chats", newTotal).apply()
                     }
                 } else {
-                    Log.e("BILLING", "Backend failed to grant chats. Purchase will not be acknowledged.")
+                    Log.e("BILLING", "Backend failed to verify purchase. Purchase will not be acknowledged.")
                     Toast.makeText(this@SubscriptionActivity, "Server error. Please try again.", Toast.LENGTH_LONG).show()
-                    enableButtonsAfterFailure() // Re-enable buttons so user can retry
+                    enableButtonsAfterFailure()
                 }
             }
 
-            override fun onFailure(call: Call<GrantChatsResponse>, t: Throwable) {
-                Log.e("BILLING", "Network error while granting chats.", t)
+            override fun onFailure(call: Call<PurchaseResponse>, t: Throwable) {
+                Log.e("BILLING", "Network error while verifying purchase.", t)
                 Toast.makeText(this@SubscriptionActivity, "Network error. Please try again.", Toast.LENGTH_LONG).show()
-                enableButtonsAfterFailure() // Re-enable buttons so user can retry
+                enableButtonsAfterFailure()
             }
         })
     }

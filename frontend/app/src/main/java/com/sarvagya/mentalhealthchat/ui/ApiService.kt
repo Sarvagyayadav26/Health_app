@@ -46,18 +46,7 @@ data class ChatHistoryMessagesRequest(
     val session_id: String
 )
 
-// Request/response for granting chats after purchase verification
-data class GrantChatsRequest(
-    val email: String,
-    val add: Int,
-    val purchaseToken: String
-)
-
-data class GrantChatsResponse(
-    val success: Boolean?,
-    val newChatCount: Int?,
-    val error: String?
-)
+// (No grant endpoint) Use `purchase/verify` for purchase verification and granting.
 
 interface ApiService {
 
@@ -82,7 +71,6 @@ interface ApiService {
     @POST("/chat/history/get")
     fun getChatHistoryMessages(@Body request: ChatHistoryMessagesRequest): Call<ChatHistoryMessagesResponse>
 
-    @POST("/purchase/grant")
-    fun grantChats(@Body request: GrantChatsRequest): Call<GrantChatsResponse>
+    // Removed `/purchase/grant` — client should call `purchase/verify` instead.
 
 }
