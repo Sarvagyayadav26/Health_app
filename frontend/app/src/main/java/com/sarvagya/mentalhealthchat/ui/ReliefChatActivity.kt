@@ -85,7 +85,7 @@ class ReliefChatActivity : AppCompatActivity() {
                         if (!response.isSuccessful || res == null || res.allowed == false) {
                             chatBox.append("\nBot: No chats left. Buy more.\n")
                             buy10Btn.visibility = View.VISIBLE
-                            chatsBtn.text = "Chats: 0"
+                            fetchRemainingChats(email)
                             return
                         }
 
@@ -129,7 +129,7 @@ class ReliefChatActivity : AppCompatActivity() {
                     call: Call<ChatsResponse>,
                     response: Response<ChatsResponse>
                 ) {
-                    val chats = response.body()?.chats ?: 5
+                    val chats = response.body()?.chats ?: 0
                     currentRemainingChats = chats
                     chatsBtn.text = "Chats: $chats"
                     buy10Btn.visibility =
@@ -137,8 +137,8 @@ class ReliefChatActivity : AppCompatActivity() {
                 }
 
                 override fun onFailure(call: Call<ChatsResponse>, t: Throwable) {
-                    currentRemainingChats = 5
-                    chatsBtn.text = "Chats: 5"
+                    currentRemainingChats = 0
+                    chatsBtn.text = "Chats: --"
                     buy10Btn.visibility = View.GONE
                 }
             })

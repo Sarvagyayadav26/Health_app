@@ -7,8 +7,8 @@ import logging
 logger = logging.getLogger("backend")
 
 
-DB_PATH = os.path.join(os.path.dirname(__file__), "user_data.db")
-# DB_PATH = "/var/data/user_data.db"
+# DB_PATH = os.path.join(os.path.dirname(__file__), "user_data.db")
+DB_PATH = "/var/data/user_data.db"
 
 def init_db():
     conn = sqlite3.connect(DB_PATH)

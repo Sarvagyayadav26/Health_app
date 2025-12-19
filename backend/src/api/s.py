@@ -18,6 +18,7 @@ from typing import Optional, Union
 import time
 import logging
 import bcrypt
+import re
 from sqlite3 import IntegrityError
 import sqlite3
 
@@ -40,9 +41,18 @@ DEPLOYMENT_MODE = "android"  # ← CHANGE THIS LINE FOR DIFFERENT DEPLOYMENTS
 THRESHOLD_TOTAL = 0
 
 # Logging setup
-logging.basicConfig(level=logging.WARNING)
+logging.basicConfig(level=logging.WARNING)  # root logger level, WARNING/ERROR/CRITICAL from anywhere
 logger = logging.getLogger("backend")
+#debug
 logger.setLevel(logging.DEBUG)
+"""
+update this: logger.setLevel(logging.DEBUG)
+logging.INFO: DEBUG, INFO, WARNING, ERROR, CRITICAL
+logging.INFO: INFO, WARNING, ERROR, CRITICAL
+logging.WARNING: WARNING, ERROR, CRITICAL
+logging.ERROR: ERROR, CRITICAL
+logging.CRITICAL: CRITICAL
+"""
 
 # Initialize FastAPI app
 app = FastAPI(title="Mental Health RAG API - Unified")
@@ -327,6 +337,46 @@ async def chat(req: ChatRequest):
     
     chat_history = ChatHistory(email)
     start = time.time()
+    # If user explicitly asks for a listing of their previous messages,
+    # return a deterministic, DB-built numbered recap instead of delegating
+    # to the LLM. This avoids non-deterministic re-ordering by the model.
+    try:
+        if isinstance(message, str):
+            mlow = message.strip().lower()
+            if re.search(r"(?:give|list).*(?:previous|previous messages|my previous)|previous messages|what was my previous message|list my previous", mlow):
+                try:
+                    rows = get_messages(email, limit=200, session_id=session_id)
+                    user_msgs = [r[1] for r in rows if r[0] == 'user']
+                    if not user_msgs:
+                        recap = "No previous user messages found."
+                    else:
+                        lines = [f"{i+1}. `{m}`" for i, m in enumerate(user_msgs)]
+                        recap = "Here’s a quick recap of everything you’ve sent so far:\n\n" + "\n".join(lines)
+
+                    if DEPLOYMENT_MODE == "testing":
+                        return JSONResponse({
+                            "reply": recap,
+                            "documents": [],
+                            "has_retrieval": False,
+                            "usage_stats": {"total": usage_total},
+                            "chats": chats,
+                            "error": None
+                        })
+                    else:
+                        return {
+                            "allowed": True,
+                            "reply": recap,
+                            "usage_now": usage_total,
+                            "chats": chats,
+                            "limit": THRESHOLD_TOTAL if THRESHOLD_TOTAL > 0 else "unlimited",
+                            "processing_time": round(time.time() - start, 2),
+                            "error": None
+                        }
+                except Exception:
+                    logger.exception("Failed to build deterministic recap")
+    except Exception:
+        # Be defensive: if anything goes wrong here, continue with normal flow
+        pass
     
     try:
         if DEPLOYMENT_MODE == "testing":
@@ -525,7 +575,9 @@ async def verify_purchase(req: dict):
     The purchased chats bypass threshold limits.
     """
     email = req.get("email")
-    product_id = req.get("product_id")
+    # Accept either `purchase_token` (frontend test) or `purchaseToken`.
+    purchase_token = req.get("purchase_token") or req.get("purchaseToken")
+    product_id = req.get("product_id") or req.get("productId")
     
     # Step 1: Validate user exists
     user = get_user(email)
@@ -536,6 +588,11 @@ async def verify_purchase(req: dict):
             "chats_added": 0
         }
     
+    # (Optional) Log that we received a purchase token. We do NOT verify
+    # with Google Play here — add server-side verification for production.
+    if purchase_token:
+        logger.debug("/purchase/verify - received purchase_token (truncated)=%s", str(purchase_token)[:12])
+
     # Step 2: Map product to chats amount
     # Product ID -> Number of chats to add
     product_chats = {
@@ -570,6 +627,7 @@ async def verify_purchase(req: dict):
         "remaining_chats": remaining,
         "updated_usage": updated_stats
     }
+
 
 
 # ======================================================================
