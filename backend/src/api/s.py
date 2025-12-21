@@ -25,8 +25,10 @@ import sqlite3
 from src.storage.chat_history import ChatHistory
 from src.storage.user_db import (
     init_db, create_user, get_user, save_message,
-    increment_usage, get_usage_stats, add_chats, get_messages, DB_PATH
+    increment_usage, get_usage_stats, add_chats, get_messages, DB_PATH,
+    is_purchase_token_processed, mark_purchase_token_processed, list_processed_purchases
 )
+from src.payments import google_play
 
 # ======================================================================
 # 🔧 CONFIGURATION - CHANGE THIS FOR TESTING VS PRODUCTION
@@ -173,9 +175,7 @@ async def register(req: RegisterRequest):
             # Explicitly reject registration when the user already exists.
             err = {"error": "User already exists. Please login."}
             logger.info("Registration blocked - user exists: %s", req.email)
-            if DEPLOYMENT_MODE == "testing":
-                return JSONResponse(err, status_code=409)
-            return err
+            return JSONResponse(err, status_code=409)
 
         try:
             create_user(email, req.age, req.sex, req.password)
@@ -183,17 +183,13 @@ async def register(req: RegisterRequest):
         except IntegrityError:
             logger.warning("Duplicate registration attempt (race): %s", req.email)
             err = {"error": "User already exists. Please login."}
-            if DEPLOYMENT_MODE == "testing":
-                return JSONResponse(err, status_code=409)
-            return err
+            return JSONResponse(err, status_code=409)
         except ValueError as ve:
             # create_user raises ValueError("user_exists") on duplicate
             if str(ve) == "user_exists":
                 logger.warning("Duplicate registration attempt: %s", req.email)
                 err = {"error": "User already exists. Please login."}
-                if DEPLOYMENT_MODE == "testing":
-                    return JSONResponse(err, status_code=409)
-                return err
+                return JSONResponse(err, status_code=409)
             raise
 
         if DEPLOYMENT_MODE == "android":
@@ -588,10 +584,24 @@ async def verify_purchase(req: dict):
             "chats_added": 0
         }
     
-    # (Optional) Log that we received a purchase token. We do NOT verify
-    # with Google Play here — add server-side verification for production.
+    # (Optional) Log that we received a purchase token.
     if purchase_token:
         logger.debug("/purchase/verify - received purchase_token (truncated)=%s", str(purchase_token)[:12])
+
+    # Idempotency: if we've already processed this purchase token, return success without double-grant
+    if purchase_token and is_purchase_token_processed(purchase_token):
+        logger.info("/purchase/verify - purchase_token already processed: %s", str(purchase_token)[:12])
+        # Re-read user to return current remaining chats
+        user = get_user(email)
+        remaining = user[5] if user and len(user) > 5 else 0
+        return {
+            "success": True,
+            "chats_added": 0,
+            "product_id": product_id,
+            "message": "Already processed purchase token",
+            "remaining_chats": remaining,
+            "updated_usage": get_usage_stats(email)
+        }
 
     # Step 2: Map product to chats amount
     # Product ID -> Number of chats to add
@@ -604,9 +614,51 @@ async def verify_purchase(req: dict):
     
     chats_to_add = product_chats.get(product_id, 5)  # Default 5 if unknown
     
+    # Optional: Verify with Google Play if service account + package name are configured
+    try:
+        if config.GOOGLE_SERVICE_ACCOUNT_FILE and config.PLAY_PACKAGE_NAME:
+            try:
+                verify_resp = google_play.verify_product_purchase(config.PLAY_PACKAGE_NAME, product_id, purchase_token)
+                # Google Play returns purchaseState==0 when purchased
+                if verify_resp is None:
+                    logger.debug("Google Play verification skipped (no response)")
+                else:
+                    purchase_state = int(verify_resp.get("purchaseState", 1))
+                    if purchase_state != 0:
+                        logger.warning("Google Play reports non-purchased state for token: %s state=%s", str(purchase_token)[:12], purchase_state)
+                        return {
+                            "success": False,
+                            "chats_added": 0,
+                            "product_id": product_id,
+                            "message": "Google Play verification failed: not purchased",
+                            "remaining_chats": get_user(email)[5] if get_user(email) else 0,
+                            "updated_usage": get_usage_stats(email)
+                        }
+            except Exception as e:
+                logger.exception("Google Play verification exception: %s", e)
+                return {
+                    "success": False,
+                    "chats_added": 0,
+                    "product_id": product_id,
+                    "message": "Google Play verification error",
+                    "remaining_chats": get_user(email)[5] if get_user(email) else 0,
+                    "updated_usage": get_usage_stats(email)
+                }
+
+    except Exception:
+        logger.debug("Skipping Google Play verification - config not available or error")
+
     # Step 3: Add chats to user's account
     # Note: This adds to 'chats' column which works for ALL chat types
     add_chats(email, chats_to_add)
+
+    # Mark this purchase token as processed to ensure idempotency
+    if purchase_token:
+        try:
+            mark_purchase_token_processed(purchase_token, email, product_id)
+            logger.debug("/purchase/verify - marked token processed: %s", str(purchase_token)[:12])
+        except Exception:
+            logger.exception("Failed to mark purchase token as processed")
 
     # Re-read user to get authoritative updated chats value
     user = get_user(email)
@@ -627,6 +679,23 @@ async def verify_purchase(req: dict):
         "remaining_chats": remaining,
         "updated_usage": updated_stats
     }
+
+
+@app.get("/debug/purchases")
+def debug_list_purchases(limit: int = 50):
+    """Return recent processed purchase tokens for debugging (truncated)."""
+    try:
+        rows = list_processed_purchases(limit)
+        # redact tokens in output (show only first 12 chars)
+        return {
+            "success": True,
+            "purchases": [
+                {"token_preview": (r[0][:12] if r[0] else None), "email": r[1], "product_id": r[2], "created_at": r[3]} for r in rows
+            ]
+        }
+    except Exception as e:
+        logger.exception("debug_list_purchases failed: %s", e)
+        return {"success": False, "error": str(e)}
 
 
 
@@ -861,4 +930,4 @@ if __name__ == "__main__":
     port = 8001 if DEPLOYMENT_MODE == "android" else 8000
     
     logger.info(f"🚀 Starting {DEPLOYMENT_MODE.upper()} server on port {port}...")
-    # uvicorn.run("src.api.s:app", host="0.0.0.0", port=port, reload=False)
+    uvicorn.run("src.api.s:app", host="0.0.0.0", port=port, reload=True)

@@ -1,3 +1,4 @@
+//ss
 package com.sarvagya.mentalhealthchat.ui
 
 import android.content.Intent
@@ -22,7 +23,7 @@ class ReliefChatActivity : AppCompatActivity() {
     private lateinit var closeHistoryBtn: Button
 
     private var currentRemainingChats: Int = -1
-    private var isSubscriptionOpen = false   // ✅ guard
+    private var isSubscriptionOpen = false
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -49,19 +50,21 @@ class ReliefChatActivity : AppCompatActivity() {
             return
         }
 
-        // ✅ ONLY place where subscription opens
         buy10Btn.setOnClickListener {
             openSubscription()
         }
 
-        // Always open subscription page when chats button is tapped
         chatsBtn.setOnClickListener {
-            android.util.Log.d("RELIEF", "chatsBtn clicked, currentRemainingChats=$currentRemainingChats — opening subscription")
             openSubscription()
         }
 
-        chatsHistoryBtn.setOnClickListener { displayAllChats(email) }
-        closeHistoryBtn.setOnClickListener { closeHistoryView() }
+        chatsHistoryBtn.setOnClickListener {
+            displayAllChats(email)
+        }
+
+        closeHistoryBtn.setOnClickListener {
+            closeHistoryView()
+        }
 
         fetchRemainingChats(email)
 
@@ -73,9 +76,10 @@ class ReliefChatActivity : AppCompatActivity() {
             inputBox.setText("")
             scrollView.post { scrollView.fullScroll(ScrollView.FOCUS_DOWN) }
 
-            val api = RetrofitClient.instance
-            api.chat(ChatRequest(email, message, "default"))
+            RetrofitClient.instance
+                .chat(ChatRequest(email, message, "default"))
                 .enqueue(object : Callback<ChatResponse> {
+
                     override fun onResponse(
                         call: Call<ChatResponse>,
                         response: Response<ChatResponse>
@@ -108,23 +112,37 @@ class ReliefChatActivity : AppCompatActivity() {
         if (isSubscriptionOpen) return
         isSubscriptionOpen = true
 
+        val prefs = getSharedPreferences("app", MODE_PRIVATE)
+        val persisted = prefs.getInt("chats", -1)
+
+        val chatsToSend =
+            if (currentRemainingChats >= 0) currentRemainingChats
+            else if (persisted >= 0) persisted
+            else 0
+
         val intent = Intent(this, SubscriptionActivity::class.java)
-        intent.putExtra("CHATS", currentRemainingChats)
+        intent.putExtra("CHATS", chatsToSend)
         startActivity(intent)
     }
 
+    // ✅ SINGLE, CORRECT onResume
     override fun onResume() {
         super.onResume()
         isSubscriptionOpen = false
 
         val email = getSharedPreferences("app", MODE_PRIVATE)
             .getString("email", null)
-        if (email != null) fetchRemainingChats(email)
+
+        if (email != null) {
+            fetchRemainingChats(email)
+        }
     }
 
     private fun fetchRemainingChats(email: String) {
-        RetrofitClient.instance.getUserChats(UserChatsRequest(email))
+        RetrofitClient.instance
+            .getUserChats(UserChatsRequest(email))
             .enqueue(object : Callback<ChatsResponse> {
+
                 override fun onResponse(
                     call: Call<ChatsResponse>,
                     response: Response<ChatsResponse>
@@ -132,8 +150,14 @@ class ReliefChatActivity : AppCompatActivity() {
                     val chats = response.body()?.chats ?: 0
                     currentRemainingChats = chats
                     chatsBtn.text = "Chats: $chats"
+
                     buy10Btn.visibility =
                         if (chats <= 0) View.VISIBLE else View.GONE
+
+                    getSharedPreferences("app", MODE_PRIVATE)
+                        .edit()
+                        .putInt("chats", chats)
+                        .apply()
                 }
 
                 override fun onFailure(call: Call<ChatsResponse>, t: Throwable) {
@@ -144,7 +168,43 @@ class ReliefChatActivity : AppCompatActivity() {
             })
     }
 
-    private fun displayAllChats(email: String) { /* unchanged */ }
+    private fun displayAllChats(email: String) {
+        // Use Retrofit (centralized BASE_URL) to fetch messages and open history
+        val req = ChatHistoryMessagesRequest(email = email, limit = 200, session_id = "1")
+        RetrofitClient.instance.getChatHistoryMessages(req)
+            .enqueue(object : Callback<ChatHistoryMessagesResponse> {
+                override fun onResponse(
+                    call: Call<ChatHistoryMessagesResponse>,
+                    response: Response<ChatHistoryMessagesResponse>
+                ) {
+                    val msgs = response.body()?.messages
+                    val serializableList = ArrayList<java.util.HashMap<String, String>>()
+                    if (msgs != null && msgs.isNotEmpty()) {
+                        for (m in msgs) {
+                            val map = java.util.HashMap<String, String>()
+                            map["role"] = m.role ?: ""
+                            map["content"] = m.content ?: ""
+                            map["timestamp"] = m.timestamp ?: ""
+                            serializableList.add(map)
+                        }
+                    }
 
-    private fun closeHistoryView() { /* unchanged */ }
+                    runOnUiThread {
+                        val intent = Intent(this@ReliefChatActivity, ChatHistoryActivity::class.java)
+                        intent.putExtra("MESSAGES", serializableList as java.io.Serializable)
+                        startActivity(intent)
+                    }
+                }
+
+                override fun onFailure(call: Call<ChatHistoryMessagesResponse>, t: Throwable) {
+                    runOnUiThread {
+                        Toast.makeText(this@ReliefChatActivity, "History load failed", Toast.LENGTH_SHORT).show()
+                    }
+                }
+            })
+    }
+
+    private fun closeHistoryView() {
+        // no-op (kept for compatibility)
+    }
 }

@@ -7,12 +7,11 @@
     android:gravity="center"
     android:background="#F5F5F5">
 
-    <Button
+    <com.google.android.material.button.MaterialButton
         android:id="@+id/backBtn"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="Back"
-
         android:textColor="#000000"
         android:layout_gravity="start"
         android:layout_marginBottom="32dp" />
@@ -65,12 +64,11 @@
                 android:textColor="#666666"
                 android:layout_marginTop="8dp" />
 
-            <Button
+            <com.google.android.material.button.MaterialButton
                 android:id="@+id/buy5Btn"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:text="Buy 5 Chats"
-              
                 android:textColor="#000000"
                 android:layout_marginTop="16dp"
                 android:padding="12dp" />
@@ -107,12 +105,11 @@
                 android:textColor="#666666"
                 android:layout_marginTop="8dp" />
 
-            <Button
+            <com.google.android.material.button.MaterialButton
                 android:id="@+id/buy10Btn"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:text="Buy 10 Chats"
-           
                 android:textColor="#000000"
                 android:layout_marginTop="16dp"
                 android:padding="12dp" />

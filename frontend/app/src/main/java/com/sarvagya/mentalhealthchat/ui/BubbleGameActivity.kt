@@ -171,7 +171,7 @@ class BubbleGameActivity : AppCompatActivity() {
         sorted.forEach { entry ->
             if (entry.value > 0) {
                 val percentage = if (total > 0) (entry.value.toFloat() / total.toFloat()) * 100 else 0f
-                sb.append("${entry.key}: ${"%.1f".format(percentage)}%\n")
+                sb.append("${entry.key}: ${entry.value} (${"%.1f".format(percentage)}%)\n")
             }
         }
         if (sb.isEmpty()) sb.append("No data yet.")
@@ -264,17 +264,24 @@ class BubbleGameActivity : AppCompatActivity() {
             // Click Listener
             bubble.setOnClickListener {
                 if (isBubbleInZone(bubble) && !isPaused) {
+                    // Disable further clicks to prevent multiple rewards for one bubble
+                    bubble.setOnClickListener(null)
+                    
                     score++
                     updateScore()
                     saveBubbleCount(label)
                     
-                    // Visual feedback instead of removing
+                    // Burst animation: fade out and scale up
                     bubble.animate()
-                        .scaleX(1.1f)
-                        .scaleY(1.1f)
-                        .setDuration(100)
+                        .alpha(0f)
+                        .scaleX(1.4f)
+                        .scaleY(1.4f)
+                        .setDuration(250)
+                        .setInterpolator(LinearInterpolator())
                         .withEndAction {
-                            bubble.animate().scaleX(1f).scaleY(1f).setDuration(100).start()
+                            // After the burst animation, cancel the main animator
+                            // which will trigger its onAnimationEnd for cleanup
+                            animator.cancel()
                         }
                         .start()
                 }

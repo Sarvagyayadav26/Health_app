@@ -1,13 +1,45 @@
 <resources>
 
-    <!-- Changed parent from Theme.AppCompat.Light.NoActionBar to Theme.MaterialComponents.DayNight.NoActionBar -->
-    <style name="Theme.MentalHealthChat" parent="Theme.MaterialComponents.DayNight.NoActionBar">
-        <!-- Customize your theme here -->
+    <style name="Theme.MentalHealthChat"
+        parent="Theme.MaterialComponents.DayNight.NoActionBar">
+
         <item name="colorPrimary">@color/primary</item>
         <item name="colorPrimaryVariant">@color/primaryDark</item>
         <item name="colorOnPrimary">#FFFFFF</item>
         <item name="colorSecondary">@color/accent</item>
         <item name="colorOnSecondary">#000000</item>
+
+        <!-- APPLY TO ALL BUTTONS -->
+        <item name="materialButtonStyle">@style/AppButton</item>
+        <item name="textInputStyle">@style/AppTextInputLayout</item>
+    </style>
+
+    <!-- GLOBAL BUTTON STYLE -->
+    <style name="AppButton"
+        parent="Widget.MaterialComponents.Button">
+
+        <item name="android:textColor">#00008B</item>   <!-- dark blue text -->
+        <item name="backgroundTint">#ADD8E6</item>      <!-- light background -->
+        <item name="strokeColor">#00008B</item>         <!-- border -->
+        <item name="strokeWidth">2dp</item>
+        <item name="cornerRadius">12dp</item>
+        <!-- rippleColor: subtle semi-transparent dark-blue overlay on press -->
+        <item name="rippleColor">@color/button_ripple</item>
+        <item name="android:textAllCaps">false</item>
+    </style>
+
+    <!-- Global TextInputLayout style for filled boxes -->
+    <style name="AppTextInputLayout" parent="Widget.MaterialComponents.TextInputLayout.FilledBox">
+        <!-- white background, dark-blue stroke and rounded corners -->
+        <item name="boxBackgroundColor">@android:color/white</item>
+        <item name="boxStrokeColor">@color/inputTextDark</item>
+        <item name="boxStrokeWidth">2dp</item>
+        <item name="boxStrokeWidthFocused">2dp</item>
+        <item name="boxCornerRadiusTopStart">@dimen/corner_radius</item>
+        <item name="boxCornerRadiusTopEnd">@dimen/corner_radius</item>
+        <item name="boxCornerRadiusBottomStart">@dimen/corner_radius</item>
+        <item name="boxCornerRadiusBottomEnd">@dimen/corner_radius</item>
+        <item name="hintTextColor">@color/input_text_color</item>
     </style>
 
 </resources>

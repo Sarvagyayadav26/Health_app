@@ -7,8 +7,8 @@ import logging
 logger = logging.getLogger("backend")
 
 
-# DB_PATH = os.path.join(os.path.dirname(__file__), "user_data.db")
-DB_PATH = "/var/data/user_data.db"
+DB_PATH = os.path.join(os.path.dirname(__file__), "user_data.db")
+# DB_PATH = "/var/data/user_data.db"
 
 print("DB PATH:", DB_PATH)
 print("DIR EXISTS:", os.path.exists("/var/data"))
@@ -41,6 +41,16 @@ def init_db():
             role TEXT,
             content TEXT,
             timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        );
+    """)
+
+    # Table to store processed purchase tokens for idempotency
+    cursor.execute("""
+        CREATE TABLE IF NOT EXISTS processed_purchases (
+            purchase_token TEXT PRIMARY KEY,
+            email TEXT,
+            product_id TEXT,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         );
     """)
 
@@ -214,3 +224,42 @@ def add_chats(email, chats):
     result = cursor.fetchone()
     logger.info("Chats updated! User %s now has %s", email, result[0] if result else 0)
     conn.close()
+
+
+def is_purchase_token_processed(token: str) -> bool:
+    """Return True if the purchase token has already been processed."""
+    if not token:
+        return False
+    conn = sqlite3.connect(DB_PATH)
+    cursor = conn.cursor()
+    cursor.execute("SELECT 1 FROM processed_purchases WHERE purchase_token = ?", (token,))
+    row = cursor.fetchone()
+    conn.close()
+    return row is not None
+
+
+def mark_purchase_token_processed(token: str, email: str = None, product_id: str = None):
+    """Record the purchase token so future requests are idempotent."""
+    if not token:
+        return
+    conn = sqlite3.connect(DB_PATH)
+    cursor = conn.cursor()
+    try:
+        cursor.execute(
+            "INSERT OR IGNORE INTO processed_purchases (purchase_token, email, product_id) VALUES (?, ?, ?)",
+            (token, email, product_id)
+        )
+        conn.commit()
+    except Exception:
+        conn.rollback()
+    finally:
+        conn.close()
+
+
+def list_processed_purchases(limit: int = 50):
+    conn = sqlite3.connect(DB_PATH)
+    cursor = conn.cursor()
+    cursor.execute("SELECT purchase_token, email, product_id, created_at FROM processed_purchases ORDER BY created_at DESC LIMIT ?", (limit,))
+    rows = cursor.fetchall()
+    conn.close()
+    return rows

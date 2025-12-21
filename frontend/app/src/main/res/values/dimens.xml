@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <dimen name="activity_padding">16dp</dimen>
+    <dimen name="small_margin">8dp</dimen>
+    <dimen name="small_padding">8dp</dimen>
+    <dimen name="medium_padding">12dp</dimen>
+    <dimen name="header_top_margin">8dp</dimen>
+    <dimen name="button_min_height">48dp</dimen>
+    <dimen name="button_min_width">64dp</dimen>
+    <dimen name="corner_radius">8dp</dimen>
+    <dimen name="input_elevation">4dp</dimen>
+</resources>

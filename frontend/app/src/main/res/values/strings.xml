@@ -6,4 +6,6 @@
     <string-array name="chat_history_options">
         <item>Sessions</item>
     </string-array>
+    <string name="email_hint">Email</string>
+    <string name="password_hint">Password</string>
 </resources>

@@ -1,26 +1,31 @@
 <resources>
     <!-- Calming Psychology-Based Palette -->
-    
-    <!-- Background: #F7F8FA (Soft Light Grey-White) -->
+
+    <!-- Background -->
     <color name="bg">#F7F8FA</color>
 
-    <!-- Primary: #6C8EF5 (Soft Blue - Trust, Relaxation) -->
+    <!-- Primary -->
     <color name="primary">#6C8EF5</color>
-    <color name="primaryDark">#5A7CE2</color> <!-- Slightly darker for states -->
+    <color name="primaryDark">#5A7CE2</color>
 
-    <!-- Accent: #76D7C4 (Mint Green - Healing, Balance) -->
+    <!-- Accent -->
     <color name="accent">#76D7C4</color>
 
     <!-- Button Colors -->
-    <color name="btnLavender">#A29BFE</color> <!-- Emotional Soothing -->
-    <color name="btnMint">#81ECEC</color>     <!-- Balance -->
-    <color name="btnPeach">#FABD5A</color>     <!-- Comfort -->
+    <color name="btnLavender">#A29BFE</color>
+    <color name="btnMint">#81ECEC</color>
+    <color name="btnPeach">#FABD5A</color>
 
     <!-- Chat Colors -->
-    <color name="chatUser">#6C8EF5</color>     <!-- Primary Blue -->
-    <color name="chatBot">#E5E7EB</color>      <!-- Soft Grey -->
-    
+    <color name="chatUser">#6C8EF5</color>
+    <color name="chatBot">#E5E7EB</color>
+
     <!-- Text Colors -->
-    <color name="textDark">#2D3436</color>     <!-- Softer than pure black -->
-    <color name="textLight">#636E72</color>    <!-- Secondary text -->
+    <color name="textDark">#2D3436</color>
+    <color name="textLight">#636E72</color>
+
+    <!-- GLOBAL BUTTON TEXT (DARK BLUE) -->
+    <color name="inputTextDark">#00008B</color>
+    <!-- Button ripple (semi-transparent dark-blue) -->
+    <color name="button_ripple">#3300008B</color>
 </resources>

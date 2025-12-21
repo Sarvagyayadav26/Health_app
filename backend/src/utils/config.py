@@ -52,3 +52,11 @@ CHAT_HISTORY_WINDOW = int(os.getenv("CHAT_HISTORY_WINDOW", "10"))
 # --------------------------------------------------------
 CHAT_HISTORY_DIR = os.path.join(DATA_DIR, "chat_history")
 os.makedirs(CHAT_HISTORY_DIR, exist_ok=True)   # ensure folder exists
+
+# -------------------------------
+# Google Play verification settings
+# -------------------------------
+# Path to a Google service account JSON file with Android Publisher access
+GOOGLE_SERVICE_ACCOUNT_FILE = os.getenv("GOOGLE_SERVICE_ACCOUNT_FILE")
+# Android package name for your app (e.g. com.example.app)
+PLAY_PACKAGE_NAME = os.getenv("PLAY_PACKAGE_NAME")

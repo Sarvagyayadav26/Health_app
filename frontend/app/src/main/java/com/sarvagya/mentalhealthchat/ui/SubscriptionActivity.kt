@@ -1,3 +1,4 @@
+//s
 package com.sarvagya.mentalhealthchat.ui
 
 import android.os.Bundle
@@ -65,6 +66,21 @@ class SubscriptionActivity : AppCompatActivity() {
                 Log.d("BILLING", "setup=${result.responseCode}")
                 if (result.responseCode == BillingClient.BillingResponseCode.OK) {
                     queryProducts()
+                    // Process any already-owned INAPP purchases so they get verified & consumed
+                    billingClient.queryPurchasesAsync(
+                        QueryPurchasesParams.newBuilder().setProductType(BillingClient.ProductType.INAPP).build()
+                    ) { qResult, purchases ->
+                        if (qResult.responseCode == BillingClient.BillingResponseCode.OK) {
+                            if (!purchases.isNullOrEmpty()) {
+                                Log.d("BILLING", "Found owned purchases: ${purchases.map { it.products }}")
+                                handlePurchases(purchases)
+                            } else {
+                                Log.d("BILLING", "No owned purchases found on startup")
+                            }
+                        } else {
+                            Log.e("BILLING", "queryPurchasesAsync failed: ${qResult.debugMessage}")
+                        }
+                    }
                 }
             }
 
@@ -150,7 +166,13 @@ class SubscriptionActivity : AppCompatActivity() {
     // ---------- Handle purchase (MAJOR FIX) ----------
     private fun handlePurchases(purchases: List<Purchase>) {
         purchases.forEach { purchase ->
-            if (purchase.purchaseState == Purchase.PurchaseState.PURCHASED && !purchase.isAcknowledged) {
+            if (purchase.purchaseState == Purchase.PurchaseState.PURCHASED) {
+                // Skip if we've already processed this purchase token (prevents duplicate grants)
+                if (isTokenProcessed(purchase.purchaseToken)) {
+                    Log.d("BILLING", "Skipping already-processed purchase: ${purchase.purchaseToken}")
+                    return@forEach
+                }
+
                 val chatsToAdd = when {
                     purchase.products.contains(PRODUCT_ID_5) -> 5
                     purchase.products.contains(PRODUCT_ID_10) -> 10
@@ -187,39 +209,74 @@ class SubscriptionActivity : AppCompatActivity() {
 
         RetrofitClient.instance.verifyPurchase(req).enqueue(object : Callback<PurchaseResponse> {
             override fun onResponse(call: Call<PurchaseResponse>, response: Response<PurchaseResponse>) {
+                Log.d("BILLING", "verifyPurchase response code=${response.code()} body=${response.body()}")
                 if (response.isSuccessful && response.body()?.success == true) {
-                    acknowledgePurchase(purchase)
+                    // Mark token as processed (prevents duplicate backend grants)
+                    markTokenProcessed(purchase.purchaseToken)
+
+                    // Update stored chat count if backend provided it
                     val newTotal = response.body()?.remaining_chats
                     if (newTotal != null) {
                         getSharedPreferences("app", MODE_PRIVATE).edit().putInt("chats", newTotal).apply()
                     }
+                    runOnUiThread {
+                    refreshStatus()
+                    }
+                    // Consume the purchase (consumable flow)
+                    consumePurchase(purchase)
                 } else {
-                    Log.e("BILLING", "Backend failed to verify purchase. Purchase will not be acknowledged.")
+                    Log.e("BILLING", "Backend failed to verify purchase. code=${response.code()} message=${response.message()}")
                     Toast.makeText(this@SubscriptionActivity, "Server error. Please try again.", Toast.LENGTH_LONG).show()
                     enableButtonsAfterFailure()
                 }
             }
 
             override fun onFailure(call: Call<PurchaseResponse>, t: Throwable) {
-                Log.e("BILLING", "Network error while verifying purchase.", t)
+                Log.e("BILLING", "Network error while verifying purchase: ${t.localizedMessage}", t)
                 Toast.makeText(this@SubscriptionActivity, "Network error. Please try again.", Toast.LENGTH_LONG).show()
                 enableButtonsAfterFailure()
             }
         })
     }
 
-    // **NEW**: Acknowledge purchase only after backend success
-    private fun acknowledgePurchase(purchase: Purchase) {
-        val params = AcknowledgePurchaseParams.newBuilder().setPurchaseToken(purchase.purchaseToken).build()
-        billingClient.acknowledgePurchase(params) { billingResult ->
-            if (billingResult.responseCode == BillingClient.BillingResponseCode.OK) {
-                Toast.makeText(this, "Purchase successful!", Toast.LENGTH_SHORT).show()
-                refreshStatus() // Refresh the UI with the new chat count
-            } else {
-                Log.e("BILLING", "Failed to acknowledge purchase: ${billingResult.debugMessage}")
+    // ---------- Processed token helpers (persistent) ----------
+    private fun isTokenProcessed(token: String): Boolean {
+        val set = getSharedPreferences("app", MODE_PRIVATE).getStringSet("processed_purchases", emptySet())
+        return set?.contains(token) == true
+    }
+
+    private fun markTokenProcessed(token: String) {
+        val prefs = getSharedPreferences("app", MODE_PRIVATE)
+        val existing = prefs.getStringSet("processed_purchases", null)?.toMutableSet() ?: mutableSetOf()
+        existing.add(token)
+        prefs.edit().putStringSet("processed_purchases", existing).apply()
+    }
+
+    // **NEW**: Consume purchase (for consumable SKUs) after backend success
+    private fun consumePurchase(purchase: Purchase) {
+        val params = ConsumeParams.newBuilder()
+            .setPurchaseToken(purchase.purchaseToken)
+            .build()
+
+        billingClient.consumeAsync(params) { billingResult, _ ->
+            runOnUiThread {
+                if (billingResult.responseCode == BillingClient.BillingResponseCode.OK) {
+                    Toast.makeText(
+                        this@SubscriptionActivity,
+                        "Purchase successful!",
+                        Toast.LENGTH_SHORT
+                    ).show()
+
+                    refreshStatus()
+                    enableButtonsAfterFailure()
+                } else {
+                    Log.e("BILLING", "Failed to consume purchase: ${billingResult.debugMessage}")
+                    enableButtonsAfterFailure()
+                }
             }
         }
     }
+
 
 
     // ---------- Helpers ----------

@@ -45,6 +45,9 @@
         <!-- Subscription Test Activity (for testing without Google Play) -->
         <activity android:name="com.sarvagya.mentalhealthchat.ui.SubscriptionTestActivity" />
 
+        <!-- Chat History Activity -->
+        <activity android:name="com.sarvagya.mentalhealthchat.ui.ChatHistoryActivity" />
+
         <!-- Main Activity (Launcher) -->
         <activity
             android:name="com.sarvagya.mentalhealthchat.ui.MainActivity"

@@ -36,7 +36,7 @@
             android:background="@drawable/input_bg"
             android:padding="12dp" />
 
-        <Button
+        <com.google.android.material.button.MaterialButton
             android:id="@+id/sendBtn"
             android:text="Send"
             android:layout_marginLeft="10dp"
