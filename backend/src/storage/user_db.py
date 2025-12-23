@@ -29,6 +29,7 @@ def init_db():
             password_hash TEXT,
             usage_count INTEGER DEFAULT 0,
             chats INTEGER DEFAULT 5,
+            history_hidden INTEGER DEFAULT 0,
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         );
     """)
@@ -62,6 +63,30 @@ def init_db():
     conn.commit()
     conn.close()
 
+    # Ensure legacy databases have required columns (safe migration)
+    try:
+        conn = sqlite3.connect(DB_PATH)
+        cursor = conn.cursor()
+        cursor.execute("PRAGMA table_info('users')")
+        cols = [r[1] for r in cursor.fetchall()]
+        # Add missing columns with safe defaults
+        if 'usage_count' not in cols:
+            cursor.execute("ALTER TABLE users ADD COLUMN usage_count INTEGER DEFAULT 0")
+        if 'chats' not in cols:
+            cursor.execute("ALTER TABLE users ADD COLUMN chats INTEGER DEFAULT 5")
+        if 'history_hidden' not in cols:
+            cursor.execute("ALTER TABLE users ADD COLUMN history_hidden INTEGER DEFAULT 0")
+        if 'created_at' not in cols:
+            cursor.execute("ALTER TABLE users ADD COLUMN created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP")
+        conn.commit()
+    except Exception:
+        logger.exception("Failed to migrate users table columns (non-fatal)")
+    finally:
+        try:
+            conn.close()
+        except Exception:
+            pass
+
 
 def create_user(email: str, age: int, sex: str, password: str):
     # Do NOT normalize email here; preserve the exact value provided by the client.
@@ -93,9 +118,10 @@ def get_user(email: str):
     # Preserve email as provided; do not normalize
     conn = sqlite3.connect(DB_PATH)
     cursor = conn.cursor()
-
+    # Select explicit columns and coalesce nullable numeric fields so callers can
+    # safely index into the returned row without extra length checks.
     cursor.execute(
-        "SELECT email, age, sex, password_hash, usage_count, chats FROM users WHERE email = ?",
+        "SELECT email, age, sex, password_hash, COALESCE(usage_count,0) as usage_count, COALESCE(chats,0) as chats FROM users WHERE email = ?",
         (email,)
     )
     row = cursor.fetchone()
@@ -115,12 +141,22 @@ def save_message(email: str, role: str, content: str, session_id: int = 1):
         VALUES (?, ?, ?, ?);
     """, (email, session_id, role, content))
     conn.commit()
+    try:
+        # If a real user message arrives, unhide history so new chats display
+        if isinstance(role, str) and role.lower() == 'user':
+            try:
+                cursor.execute("UPDATE users SET history_hidden = 0 WHERE email = ?", (email,))
+                conn.commit()
+            except Exception:
+                pass
+    except Exception:
+        pass
     conn.close()
-    # print(f"[DEBUG] save_message completed - Email: {email}, Session: {session_id}")
+    # print(f"[DEBUG] save_message completed - Email: {email}, Session: {session_id}") 
 
 
 
-def get_messages(email: str, limit: int = 10, session_id: int = 1):
+def get_messages(email: str, limit: int = 20, session_id: int = 1):
     # Do not normalize email
     conn = sqlite3.connect(DB_PATH)
     cursor = conn.cursor()
@@ -263,3 +299,40 @@ def list_processed_purchases(limit: int = 50):
     rows = cursor.fetchall()
     conn.close()
     return rows
+
+
+def hide_history(email: str):
+    conn = sqlite3.connect(DB_PATH)
+    cursor = conn.cursor()
+    try:
+        cursor.execute("UPDATE users SET history_hidden = 1 WHERE email = ?", (email,))
+        conn.commit()
+    except Exception:
+        conn.rollback()
+    finally:
+        conn.close()
+
+
+def unhide_history(email: str):
+    conn = sqlite3.connect(DB_PATH)
+    cursor = conn.cursor()
+    try:
+        cursor.execute("UPDATE users SET history_hidden = 0 WHERE email = ?", (email,))
+        conn.commit()
+    except Exception:
+        conn.rollback()
+    finally:
+        conn.close()
+
+
+def is_history_hidden(email: str) -> bool:
+    conn = sqlite3.connect(DB_PATH)
+    cursor = conn.cursor()
+    try:
+        cursor.execute("SELECT COALESCE(history_hidden,0) FROM users WHERE email = ?", (email,))
+        row = cursor.fetchone()
+        return bool(row and row[0])
+    except Exception:
+        return False
+    finally:
+        conn.close()

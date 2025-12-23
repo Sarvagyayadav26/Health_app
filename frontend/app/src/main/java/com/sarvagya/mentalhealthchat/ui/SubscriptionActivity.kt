@@ -1,4 +1,4 @@
-//s
+//sss
 package com.sarvagya.mentalhealthchat.ui
 
 import android.os.Bundle
@@ -55,8 +55,14 @@ class SubscriptionActivity : AppCompatActivity() {
         billingClient = BillingClient.newBuilder(this)
             .enablePendingPurchases()
             .setListener { result, purchases ->
+                // If purchase succeeded, handle purchases. Otherwise restore buttons so user can retry.
                 if (result.responseCode == BillingClient.BillingResponseCode.OK && purchases != null) {
                     handlePurchases(purchases)
+                } else {
+                    // Re-enable buttons on UI thread for canceled/failed flows
+                    runOnUiThread {
+                        enableButtonsAfterFailure()
+                    }
                 }
             }
             .build()
@@ -294,8 +300,37 @@ class SubscriptionActivity : AppCompatActivity() {
     }
 
     private fun refreshStatus() {
-        val chats = getSharedPreferences("app", MODE_PRIVATE).getInt("chats", 0)
-        statusText.text = if (chats > 0) "You have $chats chats remaining" else "You've reached your free chat limit"
+        val email = getSharedPreferences("app", MODE_PRIVATE).getString("email", null)
+        if (email == null) {
+            statusText.text = "You're not logged in"
+            return
+        }
+
+        // Fetch authoritative remaining chats from backend
+        val req = UserChatsRequest(email = email)
+        RetrofitClient.instance.getUserChats(req).enqueue(object : Callback<ChatsResponse> {
+            override fun onResponse(call: Call<ChatsResponse>, response: Response<ChatsResponse>) {
+                if (response.isSuccessful) {
+                    val chats = response.body()?.chats ?: 0
+                    // Persist authoritative value locally
+                    getSharedPreferences("app", MODE_PRIVATE).edit().putInt("chats", chats).apply()
+                    runOnUiThread {
+                        statusText.text = if (chats > 0) "You have $chats chats remaining" else "You've reached your free chat limit"
+                    }
+                } else {
+                    Log.e("SUBS", "getUserChats failed: ${response.code()} ${response.message()}")
+                }
+            }
+
+            override fun onFailure(call: Call<ChatsResponse>, t: Throwable) {
+                Log.e("SUBS", "Network error while fetching chats: ${t.localizedMessage}")
+            }
+        })
+    }
+
+    override fun onResume() {
+        super.onResume()
+        refreshStatus()
     }
 
     override fun onDestroy() {

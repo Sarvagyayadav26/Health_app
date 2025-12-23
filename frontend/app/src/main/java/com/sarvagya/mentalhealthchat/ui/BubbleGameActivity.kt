@@ -4,6 +4,7 @@ import android.animation.Animator
 import android.animation.AnimatorListenerAdapter
 import android.animation.ObjectAnimator
 import android.content.Context
+import android.content.SharedPreferences
 import android.graphics.Color
 import android.os.Bundle
 import android.os.Handler
@@ -38,7 +39,7 @@ class BubbleGameActivity : AppCompatActivity() {
     private var isPaused = false
     private val random = Random()
 
-    // Includes duplicates to increase frequency of certain items as requested
+    // s Includes duplicates to increase frequency of certain items as requested
     private val bubbleLabels = listOf(
         "Caring Others", "Caring Self", "Healing Self", "Nourishing Body",
         "Nourishing Mind", "Helping Family", "Growing Spiritually", "Having Fun",
@@ -52,6 +53,10 @@ class BubbleGameActivity : AppCompatActivity() {
     private val bubbleCounts = mutableMapOf<String, Int>()
     // Keep track of active animators to pause/resume them
     private val activeAnimators = Collections.synchronizedList(mutableListOf<Animator>())
+    private lateinit var prefsName: String
+
+    private fun getPrefs(): SharedPreferences =
+        getSharedPreferences(prefsName, Context.MODE_PRIVATE)
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -68,10 +73,14 @@ class BubbleGameActivity : AppCompatActivity() {
         resumeBtn = findViewById(R.id.resumeBtn)
         val backBtn = findViewById<Button>(R.id.backBtn)
 
+        // Determine prefs per-user (pass USER_ID via Intent). default to "guest"
+        val userId = intent.getStringExtra("USER_ID") ?: "guest"
+        prefsName = "game_prefs_$userId"
+
         // Load saved score
-        val prefs = getSharedPreferences("game_prefs", Context.MODE_PRIVATE)
+        val prefs = getPrefs()
         score = prefs.getInt("high_score", 0)
-        
+
         // Load bubble counts
         bubbleLabels.distinct().forEach { label ->
             val count = prefs.getInt("bubble_count_$label", 0)
@@ -110,7 +119,7 @@ class BubbleGameActivity : AppCompatActivity() {
 
     private fun updateScore() {
         scoreText.text = "Score: $score"
-        getSharedPreferences("game_prefs", Context.MODE_PRIVATE)
+        getPrefs()
             .edit()
             .putInt("high_score", score)
             .apply()
@@ -138,7 +147,7 @@ class BubbleGameActivity : AppCompatActivity() {
         val currentCount = bubbleCounts.getOrDefault(label, 0) + 1
         bubbleCounts[label] = currentCount
         
-        getSharedPreferences("game_prefs", Context.MODE_PRIVATE)
+        getPrefs()
             .edit()
             .putInt("bubble_count_$label", currentCount)
             .apply()
@@ -174,7 +183,7 @@ class BubbleGameActivity : AppCompatActivity() {
                 sb.append("${entry.key}: ${entry.value} (${"%.1f".format(percentage)}%)\n")
             }
         }
-        if (sb.isEmpty()) sb.append("No data yet.")
+        if (sb.isEmpty()) sb.append("You have not started the game yet.")
         pauseStatsText.text = sb.toString()
     }
 

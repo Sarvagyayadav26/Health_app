@@ -43,5 +43,32 @@ class ChatHistoryActivity : AppCompatActivity() {
             emptyText.visibility = View.GONE
             recycler.visibility = View.VISIBLE
         }
+
+        // Delete history button: hide history on the backend (UI-only) and clear UI
+        val deleteBtn = findViewById<Button>(R.id.deleteHistoryBtn)
+        deleteBtn.setOnClickListener {
+            val prefs = getSharedPreferences("app", MODE_PRIVATE)
+            val email = prefs.getString("email", null)
+            if (email == null) {
+                android.widget.Toast.makeText(this, "No user email", android.widget.Toast.LENGTH_SHORT).show()
+                return@setOnClickListener
+            }
+
+            // Call hide API
+            RetrofitClient.instance.hideHistory(UserChatsRequest(email))
+                .enqueue(object : retrofit2.Callback<BasicResponse> {
+                    override fun onResponse(call: retrofit2.Call<BasicResponse>, response: retrofit2.Response<BasicResponse>) {
+                        // Clear UI only
+                        adapter.clearAll()
+                        emptyText.visibility = View.VISIBLE
+                        recycler.visibility = View.GONE
+                        android.widget.Toast.makeText(this@ChatHistoryActivity, "History deleted", android.widget.Toast.LENGTH_SHORT).show()
+                    }
+
+                    override fun onFailure(call: retrofit2.Call<BasicResponse>, t: Throwable) {
+                        android.widget.Toast.makeText(this@ChatHistoryActivity, "Failed to hide history", android.widget.Toast.LENGTH_SHORT).show()
+                    }
+                })
+        }
     }
 }

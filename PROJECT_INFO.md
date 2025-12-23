@@ -1,26 +1,13 @@
+# issues
+7
+give all my previous messages we have discussed is giving topic bubbles not the list 
+8
+shorter messages in the chat, llm is not  understanding to answer shorty
 
-# github 
-commits
-mostly working & 2.0
-
-#
-https://mental-health-llm.onrender.com
-
-#local server
+# local server ###################################################
 python -m backend.src.api.s
 
-#run backend
-#github 
-commits
-mostly working & 2.0
-
-#
-https://mental-health-llm.onrender.com
-
-#local server
-python -m backend.src.api.s
-
-# run backend 
+# run backend ####################################################
 cd backend
 .\.venv\Scripts\python.exe -m uvicorn src.api.s:app --host 0.0.0.0 --port 8001 --reload
 
@@ -28,20 +15,12 @@ cd backend
 cd backend; .\.venv\Scripts\python.exe -m src.api.s
 .\.venv\Scripts\python.exe -m src.api.s
 
-# github
+# github ##########################################################
 git add src/api/android_server.py
 git commit -m "fix_1"
 git push
 
-#
-https://play.google.com/apps/testing/com.sarvagya.mentalhealthchat
-
-#testers
-abc@gmail.com 
-abc
-a,b,c
-
-## for production
+## for production #################################################################
 # 1 SubscriptionTestActivity
 Change the Intent in ReliefChatActivity.kt line 72 from SubscriptionTestActivity to SubscriptionActivity
 # 2 no reload
@@ -54,11 +33,42 @@ keep 1 unicorn in docker only
 DB_PATH = os.path.join(os.path.dirname(__file__), "user_data.db")
 #render
 DB_PATH = "/var/data/user_data.db"
+# 5 remove add_middleware 
+remove from s.py: add_middleware around line 134
+# 6 Safe production preset
+CHAT_HISTORY_WINDOW = 6
+top_k = 2
+Max prompt tokens: ≤ 1.5k
+# 7 logger
+logger.setLevel(logging.DEBUG)  # dev
+logger.setLevel(logging.INFO)   # prod
 
-# current versionCode = 21 
+# update response time ############################################
+.connectTimeout(30, TimeUnit.SECONDS)
+.readTimeout(30, TimeUnit.SECONDS)
+.writeTimeout(30, TimeUnit.SECONDS)
+.callTimeout(40, TimeUnit.SECONDS)
+.retryOnConnectionFailure(true)
+
+# 🧪 Testing (fast feedback)
+Connect: 5s – fail fast if backend down
+Read: 20s – enough for LLM
+Write: 10s
+Call: 25s – hard stop
+Retry: false – see errors immediately
+
+# 🚀 Production (stable UX)
+Connect: 10s – handle slow networks
+Read: 30s – LLM + RAG
+Write: 15s
+Call: 40s – safe upper bound
+Retry: true – auto recover once
+
+
+# current versionCode = 21 ##########################################################
 versionName = "sarvagya_1.4"
 
-# privacy policy
+# privacy policy ######################################################
 https://sarvagyayadav26.github.io/privacy-policy-for-mental-health/
  
 Register: 
@@ -77,11 +87,12 @@ taskkill /F /IM python.exe
 https://health-app-mjt7.onrender.com/healthz
 
 
-# tester
+# tester ################################################################
 sunny.kalgaon@gmail.com
 
 
-
+# IP of local server ##########################################################
+ipconfig
 
 .\.venv\Scripts\python.exe -m src.api.s
 
@@ -155,3 +166,16 @@ curl -X POST http://localhost:8001/chat/history/get -H "Content-Type: applicatio
 
 
 sunny.kalgaon@gmail.com
+# llm response
+career anxiety
+sleep 
+tell in short
+list all messages
+
+# chat history
+overthinking
+career 
+sleep
+career 
+short
+list all

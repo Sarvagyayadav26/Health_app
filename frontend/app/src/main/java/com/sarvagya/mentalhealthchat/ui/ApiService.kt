@@ -1,3 +1,4 @@
+//s
 package com.sarvagya.mentalhealthchat.ui
 
 import retrofit2.Call
@@ -70,6 +71,9 @@ interface ApiService {
 
     @POST("/chat/history/get")
     fun getChatHistoryMessages(@Body request: ChatHistoryMessagesRequest): Call<ChatHistoryMessagesResponse>
+
+    @POST("user/history/hide")
+    fun hideHistory(@Body request: UserChatsRequest): Call<BasicResponse>
 
     // Removed `/purchase/grant` — client should call `purchase/verify` instead.
 

@@ -1,3 +1,8 @@
+def safe_save(email, role, content, session_id):
+    try:
+        save_message(email, role, content, session_id)
+    except Exception:
+        pass
 """
 UNIFIED SERVER - Internal Testing & Android Production
 
@@ -19,16 +24,20 @@ import time
 import logging
 import bcrypt
 import re
+import random
 from sqlite3 import IntegrityError
 import sqlite3
+import src.utils.config as config
 
 from src.storage.chat_history import ChatHistory
 from src.storage.user_db import (
     init_db, create_user, get_user, save_message,
     increment_usage, get_usage_stats, add_chats, get_messages, DB_PATH,
-    is_purchase_token_processed, mark_purchase_token_processed, list_processed_purchases
+    is_purchase_token_processed, mark_purchase_token_processed, list_processed_purchases,
+    hide_history, is_history_hidden
 )
 from src.payments import google_play
+from src.llm.instruction_templates import DEFAULT_INSTRUCTION
 
 # ======================================================================
 # 🔧 CONFIGURATION - CHANGE THIS FOR TESTING VS PRODUCTION
@@ -36,17 +45,17 @@ from src.payments import google_play
 # 🟢 For INTERNAL TESTING: Use "testing"
 # 🔴 For emulator & ANDROID PRODUCTION: Use "android"
 
-# DEPLOYMENT_MODE = "testing"  # ← CHANGE THIS LINE FOR DIFFERENT DEPLOYMENTS
-DEPLOYMENT_MODE = "android"  # ← CHANGE THIS LINE FOR DIFFERENT DEPLOYMENTS
+# DEPLOYMENT_MODE = "testing"  
+DEPLOYMENT_MODE = "android"  
 
 # Set chat threshold (0 = unlimited, or set to your desired limit)
 THRESHOLD_TOTAL = 0
 
 # Logging setup
-logging.basicConfig(level=logging.WARNING)  # root logger level, WARNING/ERROR/CRITICAL from anywhere
+logging.basicConfig(level=logging.INFO)  # root logger level; use INFO for production
 logger = logging.getLogger("backend")
-#debug
-logger.setLevel(logging.DEBUG)
+# keep logger at INFO by default; enable DEBUG locally when troubleshooting
+logger.setLevel(logging.INFO)
 """
 update this: logger.setLevel(logging.DEBUG)
 logging.INFO: DEBUG, INFO, WARNING, ERROR, CRITICAL
@@ -57,7 +66,7 @@ logging.CRITICAL: CRITICAL
 """
 
 # Initialize FastAPI app
-app = FastAPI(title="Mental Health RAG API - Unified")
+app = FastAPI(title="Mental Health RAG API")
 init_db()
 
 # ======================================================================
@@ -146,10 +155,6 @@ elif DEPLOYMENT_MODE == "android":
 class ChatRequest(BaseModel):
     email: str
     message: str
-    # Accept int or string for session_id to tolerate client values like "default"
-    session_id: Optional[Union[int, str]] = 1
-    # Optional client-supplied short history (string) — backend should prefer DB history
-    history: Optional[str] = None
 
 class RegisterRequest(BaseModel):
     email: str
@@ -160,6 +165,326 @@ class RegisterRequest(BaseModel):
 class LoginRequest(BaseModel):
     email: str
     password: str
+
+
+def select_history_messages(history_rows, chat_history, current_message, max_total=12):
+    """Select which DB messages to send to the RAG/LLM pipeline.
+
+    Heuristics implemented:
+    - Default: prefer the in-memory `chat_history` window (config.CHAT_HISTORY_WINDOW).
+      If the in-memory window already provides enough context, send 0 DB msgs.
+    - If `chat_history` is empty (session resume) and DB has messages, send 2-4 recent DB msgs.
+    - If user explicitly refers to the past (keywords), allow up to 4-6 DB msgs.
+    - Always cap total messages (DB + memory) <= `max_total` and reserve one for the current message.
+    """
+    try:
+        window = int(getattr(config, "CHAT_HISTORY_WINDOW", 6))
+    except Exception:
+        window = 6
+
+    mem_msgs = chat_history.last_n(window) if chat_history is not None else []
+    mem_count = len(mem_msgs)
+
+    # Normalize DB rows into dicts (oldest->newest assumed)
+    db_msgs = [{"role": r[0], "content": r[1], "timestamp": r[2]} for r in (history_rows or [])]
+    db_count = len(db_msgs)
+
+    # Detect explicit user request to refer to past messages
+    past_kw = re.compile(r"\b(earlier|before|previous|remind|remember|past|what did i|prior|last time)\b", re.I)
+    wants_past = bool(past_kw.search(current_message or ""))
+
+    # Determine DB quota
+    if wants_past:
+        db_quota = min(6, db_count)
+    else:
+        # If in-memory window already covers the desired window, prefer 0 DB messages
+        if mem_count >= window:
+            db_quota = 0
+        else:
+            # Session resume: chat_history empty but DB has messages -> 2-4 messages
+            if mem_count == 0 and db_count > 0:
+                db_quota = min(4, db_count)
+            else:
+                need = max(0, window - mem_count)
+                db_quota = min(need, db_count)
+
+    # Enforce total cap (reserve one for current message)
+    total_allowed = max_total - 1
+    remaining_for_db = max(0, total_allowed - mem_count)
+    db_quota = min(db_quota, remaining_for_db)
+
+    if db_quota <= 0:
+        return []
+
+    # Return the most recent `db_quota` messages
+    return db_msgs[-db_quota:]
+
+
+# -------------------------
+# Tokenizer / trimming helpers
+# -------------------------
+try:
+    import tiktoken
+    try:
+        _TOKENIZER = tiktoken.get_encoding("cl100k_base")
+        _TOKENIZER_AVAILABLE = True
+    except Exception:
+        _TOKENIZER = None
+        _TOKENIZER_AVAILABLE = False
+except Exception:
+    tiktoken = None
+    _TOKENIZER = None
+    _TOKENIZER_AVAILABLE = False
+
+
+def estimate_tokens_from_text(text: str) -> int:
+    """Estimate tokens for a single text. Prefer tiktoken when available,
+    otherwise fall back to a simple heuristic: 1 token ≈ 4 chars.
+    """
+    if not text:
+        return 0
+    try:
+        if _TOKENIZER_AVAILABLE and _TOKENIZER is not None:
+            return len(_TOKENIZER.encode(text))
+    except Exception:
+        pass
+    # fallback heuristic
+    return max(1, len(text) // 4)
+
+
+def count_tokens_for_messages(messages: list) -> int:
+    """Messages is a list of dicts with 'content' or raw strings."""
+    total = 0
+    for m in messages or []:
+        if isinstance(m, dict):
+            text = (m.get("content") or "")
+        else:
+            text = str(m)
+        total += estimate_tokens_from_text(text)
+    return total
+
+
+def trim_history_to_token_budget(instruction: str, db_msgs: list, mem_msgs: list, rag_docs: list, user_msg: str, budget: int = 1500):
+    """Trim DB messages and RAG docs to fit within budget tokens.
+
+    Strategy:
+    - Count tokens for instruction + user_msg + mem_msgs (mem kept last, not trimmed unless necessary).
+    - Drop oldest DB messages first until under budget.
+    - If still over budget, trim RAG docs (drop lowest priority / oldest first).
+    - Never drop in-memory `mem_msgs` unless absolutely necessary; if forced, drop oldest mem_msgs.
+    Returns (db_msgs_trimmed, rag_docs_trimmed)
+    """
+    instr_tokens = estimate_tokens_from_text(instruction or "")
+    user_tokens = estimate_tokens_from_text(user_msg or "")
+    mem_tokens = count_tokens_for_messages(mem_msgs)
+    db_tokens = count_tokens_for_messages(db_msgs)
+    rag_tokens = count_tokens_for_messages(rag_docs)
+
+    total = instr_tokens + user_tokens + mem_tokens + db_tokens + rag_tokens
+    if total <= budget:
+        return db_msgs, rag_docs
+
+    # Start dropping oldest DB messages
+    db_trim = list(db_msgs or [])
+    rag_trim = list(rag_docs or [])
+
+    # Drop DB messages oldest-first until either under budget or none left
+    while db_trim and total > budget:
+        removed = db_trim.pop(0)
+        removed_tokens = estimate_tokens_from_text(removed.get("content") if isinstance(removed, dict) else str(removed))
+        total -= removed_tokens
+
+    # If still over budget, drop RAG docs (assume rag_docs is list of dicts with 'text')
+    i = 0
+    while rag_trim and total > budget:
+        removed = rag_trim.pop(0)
+        # try common keys
+        text = (removed.get("text") if isinstance(removed, dict) else str(removed)) or ""
+        removed_tokens = estimate_tokens_from_text(text)
+        total -= removed_tokens
+        i += 1
+
+    # If still over budget, drop oldest mem messages as last resort
+    mem_trim = list(mem_msgs or [])
+    while mem_trim and total > budget:
+        removed = mem_trim.pop(0)
+        removed_tokens = estimate_tokens_from_text(removed.get("content") if isinstance(removed, dict) else str(removed))
+        total -= removed_tokens
+
+    return db_trim, rag_trim
+
+
+# -------------------------
+# Low-confidence detection & fallback
+# -------------------------
+LOW_CONF_PATTERNS = [
+    "i'm not sure",
+    "i am not sure",
+    "i don't understand",
+    "i do not understand",
+    "can you clarify",
+    "tell me more",
+    "unclear",
+    "i'm not able",
+    "i am not able",
+    "i can't",
+    "i cannot",
+]
+
+EMOTION_KEYWORDS = [
+    "anxiety", "anxious", "panic", "panic attack", "worried", "worry",
+    "stress", "stressed", "sad", "depressed", "depression", "scared",
+    "fear", "overwhelmed", "sleep", "insomnia", "tired", "upset",
+    "heart", "racing", "breath", "breathing", "grounding"
+]
+
+SUPPORTED_TOPICS = [
+    "Anxiety & Panic",
+    "Overthinking & Mental Loops",
+    "Stress, Burnout & Emotional Exhaustion",
+    "Career, Studies & Work Pressure",
+    "Fear of Failure, Mistakes & Success",
+    "Uncertainty About the Future & Life Direction",
+    "Self-Worth, Comparison & Confidence",
+    "Social Anxiety, Judgement & Rejection",
+    "Relationships, Attachment & Breakups",
+    "Marriage & Long-Term Relationship Issues",
+    "Loneliness, Abandonment & Being Alone",
+    "Sleep Problems & Night Overthinking",
+    "Health Anxiety & Body-Related Fears",
+    "Emotional Numbness, Disconnection & Identity",
+    "Feeling Overwhelmed & Losing Control",
+]
+
+
+# Crisis keywords (non-LLM immediate guard)
+CRISIS_KW = [
+    "suicide", "kill myself", "end my life", "self harm", "self-harm", "i want to die",
+]
+
+# -------------------------
+# Greeting handler (fast, no-LLM)
+# -------------------------
+GREETING_PATTERNS = re.compile(
+    # Match common greeting starters (allow punctuation and trailing text)
+    r"^\s*(hi|hii|hi there|hello|hello there|hey|hey there|hlo|hola|namaste|good morning|good evening)\b[!.,?\"']?\s*(.*)$",
+    re.I
+)
+
+GREETING_REPLIES = [
+    "Hello 💙 Take a moment. What are you feeling right now?",
+    "Hey 👋 You’re safe here. Tell me what’s troubling you.",
+    "Hi there. What would you like help with today?",
+    "Hello 🌱 You can talk freely here."
+]
+
+def is_greeting(text: str) -> bool:
+    if not text:
+        return False
+    # Strip leading/trailing whitespace and rely on case-insensitive regex
+    return bool(GREETING_PATTERNS.match(text.strip()))
+
+
+def topic_confidence(text: str, min_keyword_matches: int = 1) -> bool:
+    """Cheap topic confidence: true if message contains obvious topic keywords
+    from SUPPORTED_TOPICS or common emotion keywords. This is intentionally simple
+    and fast (no embeddings).
+    """
+    if not text:
+        return False
+    tl = text.lower()
+    # Check emotion keywords first
+    for k in EMOTION_KEYWORDS:
+        if k in tl:
+            return True
+    # Check explicit topic phrase matches or keyword overlaps
+    for topic in SUPPORTED_TOPICS:
+        tlower = topic.lower()
+        # full phrase match
+        if tlower in tl:
+            return True
+        # keyword overlap: split topic into words and check presence
+        words = [w for w in re.split(r"\W+", tlower) if w]
+        matches = sum(1 for w in words if w and w in tl)
+        if matches >= min_keyword_matches and matches >= 1:
+            return True
+    return False
+
+
+# -------------------------
+# Soft topic hints + greeting builder
+# -------------------------
+SOFT_TOPIC_HINTS = [
+    "If you want, we can talk about anxiety, overthinking, sleep, or relationships.",
+    "You can share anything — stress, fear, work pressure, or just how today feels.",
+    "I can help with anxiety, overthinking, career stress, relationships, or sleep issues.",
+    "We can talk about stress, emotions, or anything that’s bothering you quietly."
+]
+
+def build_greeting_reply() -> str:
+    greeting = random.choice(GREETING_REPLIES)
+    hint = random.choice(SOFT_TOPIC_HINTS)
+    return f"{greeting}\n\n{hint}"
+
+
+# -------------------------
+# Topic prompts and UI buttons
+# -------------------------
+TOPIC_BUTTONS = [
+    "Anxiety & Panic",
+    "Overthinking & Mental Loops",
+    "Stress & Burnout",
+    "Sleep Problems",
+    "Relationships"
+]
+
+TOPIC_PROMPTS = {
+    "Overthinking & Mental Loops":
+        "The user is experiencing overthinking. Respond with emotional validation and simple grounding steps.",
+    "Anxiety & Panic":
+        "The user is experiencing anxiety or panic. Respond calmly with reassurance and grounding.",
+    "Stress & Burnout":
+        "The user is dealing with stress or burnout. Offer brief pacing, boundaries and small recovery steps.",
+    "Sleep Problems":
+        "The user has sleep problems. Offer sleep hygiene tips and short grounding routines.",
+    "Relationships":
+        "The user is having relationship difficulties. Provide validation, reflective listening and small actions."
+}
+
+
+
+def is_low_confidence_reply(reply: str) -> bool:
+    try:
+        if not isinstance(reply, str) or not reply.strip():
+            return True
+        rl = reply.lower()
+        # explicit low-confidence phrases
+        for p in LOW_CONF_PATTERNS:
+            if p in rl:
+                return True
+        # too short / generic
+        if len(rl) < 60:
+            return True
+        # lacks any emotion/problem keyword and is not very long
+        if not any(k in rl for k in EMOTION_KEYWORDS) and len(rl) < 200:
+            return True
+    except Exception:
+        return True
+    return False
+
+
+def build_guided_fallback() -> str:
+    bullets = "\n".join([f"• {t}" for t in SUPPORTED_TOPICS])
+    return (
+        "I may not have fully understood what you're feeling.\n\n"
+        "Could you try explaining it in simpler words? For example:\n"
+        "• “I feel anxious at night”\n"
+        "• “My heart races suddenly”\n"
+        "• “I feel scared without a reason”\n\n"
+        "I can help with:\n"
+        f"{bullets}\n\n"
+        "You can pick one or describe it in your own words 💙"
+    )
 
 # ======================================================================
 # AUTH ENDPOINTS
@@ -238,7 +563,8 @@ async def login(req: LoginRequest):
             "age": user[1],
             "sex": user[2],
             "usage_count": user[4],
-            "chats": user[5] if len(user) > 5 else 0,
+            # safe cast for chats (get_user returns COALESCE'd value)
+            "chats": int(user[5]) if user and len(user) > 5 else 0,
             "usage_stats": usage_stats
         }
         
@@ -260,35 +586,8 @@ async def chat(req: ChatRequest):
     """Chat endpoint with conditional logic based on deployment mode"""
     email = req.email
     message = req.message
-    # Normalize session_id: accept int, numeric string, or fallback to 1 for values like "default"
-    raw_sid = None
-    try:
-        raw_sid = getattr(req, 'session_id', None)
-    except Exception:
-        raw_sid = None
-    # also accept camelCase if client sends sessionId
-    if raw_sid is None:
-        try:
-            raw_sid = getattr(req, 'sessionId', None)
-        except Exception:
-            raw_sid = None
-
+    # Clients no longer send session_id; default to session 1 for legacy storage calls
     session_id = 1
-    try:
-        if raw_sid is None:
-            session_id = 1
-        elif isinstance(raw_sid, int):
-            session_id = raw_sid
-        elif isinstance(raw_sid, str):
-            # numeric string -> int, otherwise use default session 1
-            if raw_sid.isdigit():
-                session_id = int(raw_sid)
-            else:
-                session_id = 1
-        else:
-            session_id = int(raw_sid)
-    except Exception:
-        session_id = 1
     
     # Check user exists
     user = get_user(email)
@@ -305,7 +604,11 @@ async def chat(req: ChatRequest):
     
     # Get usage statistics
     usage_total = user[4]              # Total usage count
-    chats = user[5] if len(user) > 5 else 0
+    # `get_user()` now COALESCEs numeric fields; safely cast chats to int with fallback
+    try:
+        chats = int(user[5])
+    except Exception:
+        chats = 0
     logger.debug(f"/chat - Email: {email}, Chats before deduction: {chats}")
     try:
         usage_total = int(usage_total) if usage_total else 0
@@ -333,46 +636,109 @@ async def chat(req: ChatRequest):
     
     chat_history = ChatHistory(email)
     start = time.time()
+
+    # Detect synthetic topic-selection control signal IMMEDIATELY after reading message
+    topic_selected = False
+    selected_topic = None
+    selected_prompt = None
+    if isinstance(message, str) and message.startswith("__TOPIC_SELECTED__:"):
+        selected_topic = message.replace("__TOPIC_SELECTED__:", "", 1).strip()
+        selected_prompt = TOPIC_PROMPTS.get(
+            selected_topic,
+            f"The user is dealing with {selected_topic}. Respond with validation."
+        )
+        topic_selected = True
+
     # If user explicitly asks for a listing of their previous messages,
     # return a deterministic, DB-built numbered recap instead of delegating
     # to the LLM. This avoids non-deterministic re-ordering by the model.
-    try:
-        if isinstance(message, str):
-            mlow = message.strip().lower()
-            if re.search(r"(?:give|list).*(?:previous|previous messages|my previous)|previous messages|what was my previous message|list my previous", mlow):
-                try:
-                    rows = get_messages(email, limit=200, session_id=session_id)
-                    user_msgs = [r[1] for r in rows if r[0] == 'user']
-                    if not user_msgs:
-                        recap = "No previous user messages found."
-                    else:
-                        lines = [f"{i+1}. `{m}`" for i, m in enumerate(user_msgs)]
-                        recap = "Here’s a quick recap of everything you’ve sent so far:\n\n" + "\n".join(lines)
 
-                    if DEPLOYMENT_MODE == "testing":
-                        return JSONResponse({
-                            "reply": recap,
-                            "documents": [],
-                            "has_retrieval": False,
-                            "usage_stats": {"total": usage_total},
-                            "chats": chats,
-                            "error": None
-                        })
-                    else:
-                        return {
-                            "allowed": True,
-                            "reply": recap,
-                            "usage_now": usage_total,
-                            "chats": chats,
-                            "limit": THRESHOLD_TOTAL if THRESHOLD_TOTAL > 0 else "unlimited",
-                            "processing_time": round(time.time() - start, 2),
-                            "error": None
-                        }
-                except Exception:
-                    logger.exception("Failed to build deterministic recap")
-    except Exception:
-        # Be defensive: if anything goes wrong here, continue with normal flow
-        pass
+    # 1️⃣ GREETING SHORT-CIRCUIT (soft guidance)
+    if not topic_selected:
+        try:
+            if is_greeting(message):
+                if chats <= 0:
+                    return {
+                        "allowed": False,
+                        "reply": "You’ve used all your chats. Please buy more to continue 💙",
+                        "chats": 0,
+                        "error": None
+                    }
+                reply = build_greeting_reply()
+
+                # Persist user + assistant for UI/history, but DO NOT deduct or increment usage
+                safe_save(email, "user", message, session_id)
+                safe_save(email, "assistant", reply, session_id)
+
+                if DEPLOYMENT_MODE == "testing":
+                    return JSONResponse({
+                        "reply": reply,
+                        "show_topics": True,
+                        "topics": TOPIC_BUTTONS,
+                        "documents": [],
+                        "has_retrieval": False,
+                        "usage_stats": {"total": usage_total},
+                        "chats": chats,
+                        "error": None
+                    })
+                else:
+                    # For Android clients, do NOT prompt with topic chips on simple greetings.
+                    # Keep the soft greeting reply but avoid requesting topic selection here.
+                    return {
+                        "allowed": True,
+                        "reply": reply,
+                        "show_topics": False,
+                        "usage_now": usage_total,
+                        "chats": chats,
+                        "limit": THRESHOLD_TOTAL if THRESHOLD_TOTAL > 0 else "unlimited",
+                        "processing_time": round(time.time() - start, 2),
+                        "error": None
+                    }
+        except Exception:
+            pass
+
+        # 2️⃣ TOPIC CONFIDENCE CHECK (cheap heuristic). If not confident, show topic picker
+        try:
+            if not topic_confidence(message):
+                if chats <= 0:
+                    return {
+                        "allowed": False,
+                        "reply": "You’ve used all your chats. Please buy more to continue 💙",
+                        "chats": 0,
+                        "error": None
+                    }
+                picker = (
+                    "I want to help — please pick a topic below or explain in your own words 💙"
+                )
+                # Persist user + assistant for UI/history but DO NOT charge
+                safe_save(email, "user", message, session_id)
+                safe_save(email, "assistant", picker, session_id)
+
+                if DEPLOYMENT_MODE == "testing":
+                    return JSONResponse({
+                        "reply": picker,
+                        "show_topics": True,
+                        "topics": TOPIC_BUTTONS,
+                        "documents": [],
+                        "has_retrieval": False,
+                        "usage_stats": {"total": usage_total},
+                        "chats": chats,
+                        "error": None
+                    })
+                else:
+                    return {
+                        "allowed": True,
+                        "reply": picker,
+                        "show_topics": True,
+                        "topics": TOPIC_BUTTONS,
+                        "usage_now": usage_total,
+                        "chats": chats,
+                        "limit": THRESHOLD_TOTAL if THRESHOLD_TOTAL > 0 else "unlimited",
+                        "processing_time": round(time.time() - start, 2),
+                        "error": None
+                    }
+        except Exception:
+            pass
     
     try:
         if DEPLOYMENT_MODE == "testing":
@@ -385,7 +751,23 @@ async def chat(req: ChatRequest):
                 retriever = None
                 llm_client = None
 
-            documents = retriever.retrieve(message) if retriever else []
+            # If user selected a topic, retrieve by topic metadata for high-precision RAG
+            user_for_generation = selected_prompt if topic_selected and selected_prompt else message
+            if topic_selected and retriever:
+                try:
+                    # prefer an API that accepts query= and filter=kwargs
+                    documents = retriever.retrieve(query=selected_topic, top_k=2, filter={"topic": selected_topic})
+                except TypeError:
+                    try:
+                        documents = retriever.retrieve(selected_topic, top_k=2)
+                    except Exception:
+                        documents = []
+                except Exception:
+                    documents = []
+                user_for_generation = selected_prompt or message
+            else:
+                documents = retriever.retrieve(message) if retriever else []
+                user_for_generation = message
             has_documents = len(documents) > 0
 
             # Log retrieval results for easier debugging: counts, ids, and short previews
@@ -415,41 +797,124 @@ async def chat(req: ChatRequest):
             except Exception:
                 history_msgs = None
 
-            # Deduct from available chats
-            logger.debug(f"Before deduction - User: {email}, Chats: {chats}")
-            conn = sqlite3.connect(DB_PATH)
-            cursor = conn.cursor()
-            cursor.execute("UPDATE users SET chats = chats - 1 WHERE email = ?", (email,))
-            conn.commit()
-            
-            # Verify the update
-            cursor.execute("SELECT chats FROM users WHERE email = ?", (email,))
-            new_chats = cursor.fetchone()[0]
-            logger.debug(f"After deduction - User: {email}, Chats: {new_chats}")
-            conn.close()
-            
-            # Also increment usage_count for statistics
-            increment_usage(email)
+            # Token-budget enforcement: trim DB history and retrieved docs to fit
+            try:
+                mem_msgs = chat_history.last_n(getattr(config, "CHAT_HISTORY_WINDOW", 6))
+            except Exception:
+                mem_msgs = chat_history.last_n(6)
+
+            try:
+                db_trimmed, rag_trimmed = trim_history_to_token_budget(
+                    instruction=DEFAULT_INSTRUCTION,
+                    db_msgs=history_msgs or [],
+                    mem_msgs=mem_msgs,
+                    rag_docs=documents or [],
+                    user_msg=user_for_generation,
+                    budget=1500,
+                )
+            except Exception:
+                db_trimmed = history_msgs or []
+                rag_trimmed = documents or []
+
+            # Deduction moved after reply validation (do not charge before confirming reply)
             
             # Generate LLM response. Prefer passing DB history when available so debug LLM
-            # can reference prior messages.
-            if history_msgs:
-                # Convert history_msgs to the messages format expected by LLMClient
+            # can reference prior messages. Use trimmed DB and RAG docs.
+            if db_trimmed:
+                # Convert db_trimmed to the messages format expected by LLMClient
                 llm_messages = []
-                for m in history_msgs:
+                for m in db_trimmed:
                     llm_messages.append({"role": m.get("role", "user"), "content": m.get("content", "")})
                 # append the current user message only if we did NOT pre-save it
                 if not user_saved_before:
-                    llm_messages.append({"role": "user", "content": message})
+                    llm_messages.append({"role": "user", "content": user_for_generation})
+                # Crisis guard (non-LLM) - immediate help for high-risk messages
+                try:
+                    ml = (message or "").lower()
+                    if any(k in ml for k in CRISIS_KW):
+                        crisis_text = ("I'm really glad you reached out. You deserve support. "
+                                       "Please contact a trusted person or local helpline right now.")
+                        return JSONResponse({
+                            "reply": crisis_text,
+                            "documents": [],
+                            "has_retrieval": False,
+                            "usage_stats": {"total": usage_total},
+                            "chats": chats,
+                            "error": None
+                        })
+                except Exception:
+                    pass
+                # Optionally, LLM client may accept retrievals separately; we pass trimmed RAG docs via documents variable if used by client
                 reply = llm_client.generate_response(llm_messages)
             else:
                 reply = llm_client.generate_response([
                     {"role": "user", "content": message}
                 ])
             
-            # Save chat history
-            chat_history.add_user(message)
-            chat_history.add_assistant(reply)
+            # Protect and cap reply before saving to history/DB
+            fallback_reply = "I'm here with you. Let's take a breath and try again."
+            try:
+                if not isinstance(reply, str) or not reply.strip():
+                    reply = fallback_reply
+            except Exception:
+                reply = fallback_reply
+
+            try:
+                reply = reply[:1200]
+            except Exception:
+                reply = str(reply)[:1200]
+
+            # Low-confidence detection: if model reply seems vague or misses emotion/problem,
+            # show guided fallback to the user and DO NOT charge or save assistant message.
+            try:
+                if is_low_confidence_reply(reply):
+                    fallback = build_guided_fallback()
+                    try:
+                        chat_history.add_assistant(fallback)
+                    except Exception:
+                        pass
+                    return JSONResponse({
+                        "reply": fallback,
+                        "documents": [],
+                        "has_retrieval": False,
+                        "usage_stats": {"total": usage_total},
+                        "chats": chats,
+                        "error": None
+                    })
+            except Exception:
+                # If detection fails, proceed with normal flow (defensive)
+                pass
+
+            # Deduct from available chats now that reply validated
+            conn = sqlite3.connect(DB_PATH)
+            cursor = conn.cursor()
+            cursor.execute("""
+                UPDATE users
+                SET chats = CASE
+                    WHEN chats IS NULL THEN 0
+                    WHEN chats > 0 THEN chats - 1
+                    ELSE 0
+                END
+                WHERE email = ?
+            """, (email,))
+            conn.commit()
+            cursor.execute("SELECT COALESCE(chats, 0) FROM users WHERE email = ?", (email,))
+            row = cursor.fetchone()
+            updated_chats = int(row[0]) if row and row[0] is not None else 0
+            logger.debug(f"/chat (testing) - Email: {email}, Chats after deduction: {updated_chats}")
+            conn.close()
+
+            # Also increment usage_count for statistics
+            increment_usage(email)
+            usage_now = usage_total + 1
+
+            # Save chat history (assistant) and persist to DB
+            try:
+                chat_history.add_user(message)
+                chat_history.add_assistant(reply)
+            except Exception:
+                pass
+
             logger.debug(f"About to save user and assistant messages for email: {email}, Session: {session_id}")
             try:
                 if not user_saved_before:
@@ -458,24 +923,24 @@ async def chat(req: ChatRequest):
             except Exception as e:
                 logger.warning("/chat (testing) - failed to save messages after reply: %s", e)
             logger.debug(f"Finished saving user and assistant messages for email: {email}, Session: {session_id}")
-            
+
             documents_clean = [
                 {
-                    "text": d["text"],
-                    "score": d["score"],
-                    "metadata": d["metadata"]
+                    "text": d.get("text"),
+                    "score": d.get("score"),
+                    "metadata": d.get("metadata")
                 }
-                for d in documents
+                for d in (rag_trimmed if 'rag_trimmed' in locals() else documents)
             ]
-            
+
             return JSONResponse({
                 "reply": reply,
                 "documents": documents_clean,
                 "has_retrieval": has_documents,
                 "usage_stats": {
-                    "total": usage_total + 1
+                    "total": usage_now
                 },
-                "chats": chats - 1 if chats > 0 else 0,
+                "chats": updated_chats,
                 "error": None
             })
         
@@ -488,18 +953,100 @@ async def chat(req: ChatRequest):
             # We'll persist user+assistant messages once after the RAG pipeline returns.
             user_saved_before = False
 
-            # Fetch stored messages for this session and pass them into the RAG pipeline
-            logger.debug("/chat - fetching history for email=%s session_id=%s limit=%s", email, session_id, 7)
-            history_rows = get_messages(email, limit=7, session_id=session_id)
-            history_msgs = [{"role": r[0], "content": r[1], "timestamp": r[2]} for r in history_rows]
+            # Fetch stored messages for this session and choose which DB messages
+            # to send into the RAG pipeline using heuristics (avoid oversending).
+            logger.debug("/chat - fetching history for email=%s session_id=%s", email, session_id)
+            history_rows = get_messages(email, limit=50, session_id=session_id)
+            # Use helper to select a small, relevant set of DB messages
+            history_msgs = select_history_messages(history_rows, chat_history, message)
             logger.debug("/chat - history_msgs count=%s preview=%s", len(history_msgs), history_msgs[:3])
 
+            # Token-budget enforcement (Android): we cannot see RAG docs here (pipeline will fetch them),
+            # so conservatively trim DB messages to leave room for retrieval. Reserve ~600 tokens for RAG/docs.
+            try:
+                mem_msgs = chat_history.last_n(getattr(config, "CHAT_HISTORY_WINDOW", 6))
+            except Exception:
+                mem_msgs = chat_history.last_n(6)
+
+            try:
+                db_trimmed, _ = trim_history_to_token_budget(
+                    instruction=DEFAULT_INSTRUCTION,
+                    db_msgs=history_msgs or [],
+                    mem_msgs=mem_msgs,
+                    rag_docs=[],
+                    user_msg=message,
+                    budget=900,
+                )
+                history_msgs = db_trimmed
+            except Exception:
+                pass
+
+            # Crisis guard (non-LLM) - immediate help for high-risk messages
+            try:
+                ml = (message or "").lower()
+                if any(k in ml for k in CRISIS_KW):
+                    crisis_text = ("I'm really glad you reached out. You deserve support. "
+                                   "Please contact a trusted person or local helpline right now.")
+                    return {
+                        "allowed": True,
+                        "reply": crisis_text,
+                        "usage_now": usage_total,
+                        "chats": chats,
+                        "limit": THRESHOLD_TOTAL if THRESHOLD_TOTAL > 0 else "unlimited",
+                        "processing_time": round(time.time() - start, 2),
+                        "error": None
+                    }
+            except Exception:
+                pass
+
+            # If topic was selected, call pipeline with a focused prompt so pipeline can filter/retrieve by topic
+            pipeline_message = selected_prompt if topic_selected and selected_prompt else message
+
             # Run RAG pipeline in threadpool; log start/end for timing
-            logger.debug("/chat - running run_rag_pipeline for email=%s session_id=%s", email, session_id)
-            reply = await run_in_threadpool(run_rag_pipeline, message, chat_history, history_msgs)
+            logger.debug("/chat - running run_rag_pipeline for email=%s session_id=%s topic_selected=%s", email, session_id, topic_selected)
+            reply = await run_in_threadpool(run_rag_pipeline, pipeline_message, chat_history, history_msgs)
             logger.debug("/chat - run_rag_pipeline completed for email=%s session_id=%s reply_len=%s", email, session_id, len(reply) if isinstance(reply, str) else 0)
 
-            # Safe deduct from available chats (avoid negatives / NULL)
+            # Protect against non-string/empty replies and cap length
+            fallback_reply = "I'm here with you. Let's take a breath and try again."
+            try:
+                if not isinstance(reply, str) or not reply.strip():
+                    reply = fallback_reply
+            except Exception:
+                reply = fallback_reply
+
+            # Final defensive check - if reply still falsy, abort (no deduction)
+            if not reply:
+                raise RuntimeError("LLM returned empty reply")
+
+            # Cap response length to keep replies calm and focused
+            try:
+                reply = reply[:1200]
+            except Exception:
+                # ensure reply is a string
+                reply = str(reply)[:1200]
+
+            # Low-confidence detection (Android): if model reply seems vague, show guided fallback
+            try:
+                if is_low_confidence_reply(reply):
+                    fallback = build_guided_fallback()
+                    try:
+                        chat_history.add_assistant(fallback)
+                    except Exception:
+                        pass
+                    return {
+                        "allowed": True,
+                        "reply": fallback,
+                        "usage_now": usage_total,
+                        "chats": chats,
+                        "limit": THRESHOLD_TOTAL if THRESHOLD_TOTAL > 0 else "unlimited",
+                        "processing_time": round(time.time() - start, 2),
+                        "error": None
+                    }
+            except Exception:
+                pass
+
+            # Safe deduct from available chats (avoid negatives / NULL) - do this only after reply validated
             conn = sqlite3.connect(DB_PATH)
             cursor = conn.cursor()
             cursor.execute("""
@@ -552,7 +1099,7 @@ async def chat(req: ChatRequest):
         else:
             return {
                 "allowed": False,
-                "error": f"Failed to generate reply: {str(e)}",
+                "error": f"Service is temporarily unavailable, try again later.",
                 "chats": chats,
                 "reply": None
             }
@@ -593,7 +1140,10 @@ async def verify_purchase(req: dict):
         logger.info("/purchase/verify - purchase_token already processed: %s", str(purchase_token)[:12])
         # Re-read user to return current remaining chats
         user = get_user(email)
-        remaining = user[5] if user and len(user) > 5 else 0
+        try:
+            remaining = int(user[5]) if user else 0
+        except Exception:
+            remaining = 0
         return {
             "success": True,
             "chats_added": 0,
@@ -667,9 +1217,10 @@ async def verify_purchase(req: dict):
     updated_stats = get_usage_stats(email)
 
     # Step 5: Return success response
-    remaining = user[5] + 0 if (user and len(user) > 5) else chats_to_add
-    if user and len(user) > 5:
-        remaining = user[5]
+    try:
+        remaining = int(user[5]) if user else chats_to_add
+    except Exception:
+        remaining = chats_to_add
 
     return {
         "success": True,
@@ -741,6 +1292,12 @@ async def history_messages(req: dict):
 
     if not email:
         return {"success": False, "error": "Missing email", "messages": []}
+    # If user has hidden their history, return empty list (UI-only hide)
+    try:
+        if is_history_hidden(email):
+            return {"success": True, "messages": []}
+    except Exception:
+        pass
 
     rows = get_messages(email, limit=limit, session_id=session_id)
     messages = [{"role": r[0], "content": r[1], "timestamp": r[2]} for r in rows]
@@ -788,8 +1345,11 @@ async def get_user_chats(request: dict):
     if not user:
         return {"error": "User not found", "chats": 0}
     
-    # Extract chats (column index 5) with inline fallback
-    chats = user[5] if len(user) > 5 else 0
+    # Extract chats (column index 5) with safe cast fallback
+    try:
+        chats = int(user[5])
+    except Exception:
+        chats = 0
     
     return {
         "chats": chats,
@@ -895,6 +1455,12 @@ async def get_chat_history_messages(request: dict):
     session_id = request.get("session_id", 1)
     if not email:
         raise HTTPException(status_code=400, detail="Email required")
+    # If user has hidden their history, return empty response
+    try:
+        if is_history_hidden(email):
+            return {"messages": [], "count": 0}
+    except Exception:
+        pass
     # Get messages from database
     messages = get_messages(email, limit=limit, session_id=session_id)
     
@@ -911,6 +1477,20 @@ async def get_chat_history_messages(request: dict):
         "messages": formatted_messages,
         "count": len(formatted_messages)
     }
+
+
+@app.post("/user/history/hide")
+def hide_user_history(req: dict):
+    """Mark a user's history as hidden (UI-only; does not delete DB rows)."""
+    email = req.get("email")
+    if not email:
+        return {"success": False, "error": "Missing email"}
+    try:
+        hide_history(email)
+        return {"success": True}
+    except Exception as e:
+        logger.exception("hide_user_history failed: %s", e)
+        return {"success": False, "error": str(e)}
 @app.get("/healthz")
 def healthz():
     return {"ok": True}
@@ -920,7 +1500,7 @@ def root():
     return "ok"
 
 
-# ======================================================================
+# =======================================================================
 # MAIN ENTRY POINT
 # ======================================================================
 if __name__ == "__main__":
@@ -930,4 +1510,4 @@ if __name__ == "__main__":
     port = 8001 if DEPLOYMENT_MODE == "android" else 8000
     
     logger.info(f"🚀 Starting {DEPLOYMENT_MODE.upper()} server on port {port}...")
-    uvicorn.run("src.api.s:app", host="0.0.0.0", port=port, reload=True)
+    # uvicorn.run("src.api.s:app", host="0.0.0.0", port=port, reload=True)

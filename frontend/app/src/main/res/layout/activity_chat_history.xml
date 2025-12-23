@@ -64,6 +64,20 @@
         app:layout_constraintTop_toBottomOf="@id/emptyText"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintBottom_toBottomOf="parent" />
+        app:layout_constraintBottom_toTopOf="@id/deleteHistoryBtn"
+        android:layout_marginBottom="12dp" />
+
+    <Button
+        android:id="@+id/deleteHistoryBtn"
+        android:layout_width="wrap_content"
+        android:layout_height="36dp"
+        android:text="Delete"
+        android:textSize="12sp"
+        android:paddingHorizontal="12dp"
+        android:backgroundTint="#D32F2F"
+        android:textColor="#FFFFFF"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        android:layout_margin="12dp" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>

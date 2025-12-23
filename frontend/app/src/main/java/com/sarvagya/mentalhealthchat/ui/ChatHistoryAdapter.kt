@@ -13,7 +13,7 @@ data class LocalChatMessage(
     val timestamp: String
 )
 
-class ChatHistoryAdapter(private val items: List<LocalChatMessage>) :
+class ChatHistoryAdapter(private val items: MutableList<LocalChatMessage>) :
     RecyclerView.Adapter<ChatHistoryAdapter.VH>() {
 
     class VH(view: View) : RecyclerView.ViewHolder(view) {
@@ -50,4 +50,9 @@ class ChatHistoryAdapter(private val items: List<LocalChatMessage>) :
     }
 
     override fun getItemCount(): Int = items.size
+
+    fun clearAll() {
+        items.clear()
+        notifyDataSetChanged()
+    }
 }

@@ -7,5 +7,7 @@ data class ChatResponse(
     val limit: Any?,  // Can be Int or "unlimited" string
     val chats: Int?,
     val processing_time: Double?,
-    val error: String?
+    val error: String?,
+    val show_topics: Boolean?,
+    val topics: List<String>?
 )
