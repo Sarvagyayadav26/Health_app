@@ -1499,4 +1499,4 @@ if __name__ == "__main__":
     port = 8001 if DEPLOYMENT_MODE == "android" else 8000
     
     logger.info(f"🚀 Starting {DEPLOYMENT_MODE.upper()} server on port {port}...")
-    uvicorn.run("src.api.s:app", host="0.0.0.0", port=port, reload=False)
+    # uvicorn.run("src.api.s:app", host="0.0.0.0", port=port, reload=False)

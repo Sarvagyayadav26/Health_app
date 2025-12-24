@@ -112,7 +112,9 @@ git push
 https://play.google.com/apps/testing/com.sarvagya.mentalhealthchat
 
 #testers
-abc@gmail.com 
+ww
+w
+
 abc
 a,b,c
 
@@ -122,7 +124,7 @@ Change the Intent in ReliefChatActivity.kt line 72 from SubscriptionTestActivity
 2. you can change it to in s.py
 uvicorn.run("src.api.s:app", host="0.0.0.0", port=port, reload=False) 
 3. keep 1 unicorn in docker only
-4. Change path
+4. Change path in db_congig.py
 #local
 DB_PATH = os.path.join(os.path.dirname(__file__), "user_data.db")
 #render
@@ -135,7 +137,7 @@ Increasing timeouts
 Loading models at startup
 Better retry handling in Android
 These are code/config changes only.
-6. uncomment assert DB_PATH at line 13
+6. (check) uncomment assert DB_PATH in user_db.py at line 13
 
 #current versionCode = 21
 versionName = "sarvagya_1.4"
