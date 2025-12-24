@@ -3,16 +3,7 @@ def safe_save(email, role, content, session_id):
         save_message(email, role, content, session_id)
     except Exception:
         pass
-"""
-UNIFIED SERVER - Internal Testing & Android Production
 
-This server works for both internal testing and Android production.
-Use the configuration section below to switch between modes.
-
-CONFIGURATION:
-- For INTERNAL TESTING: Set DEPLOYMENT_MODE = "testing"
-- For ANDROID PRODUCTION: Set DEPLOYMENT_MODE = "android"
-"""
 
 from fastapi import FastAPI, HTTPException
 from fastapi.responses import JSONResponse
@@ -51,11 +42,16 @@ DEPLOYMENT_MODE = "android"
 # Set chat threshold (0 = unlimited, or set to your desired limit)
 THRESHOLD_TOTAL = 0
 
-# Logging setup
-logging.basicConfig(level=logging.INFO)  # root logger level; use INFO for production
+# testing
+# logging.basicConfig(level=logging.DEBUG)  # root logger level; use INFO for production
+# logger = logging.getLogger("backend")
+# logger.setLevel(logging.DEBUG)
+
+# production
+logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger("backend")
-# keep logger at INFO by default; enable DEBUG locally when troubleshooting
 logger.setLevel(logging.INFO)
+
 """
 update this: logger.setLevel(logging.DEBUG)
 logging.INFO: DEBUG, INFO, WARNING, ERROR, CRITICAL
@@ -140,12 +136,12 @@ elif DEPLOYMENT_MODE == "android":
         logger.info("✅ Android RAG system ready!")
     
     # Enable CORS for Android clients
-    app.add_middleware(
-        CORSMiddleware,
-        allow_origins=["*"],
-        allow_methods=["*"],
-        allow_headers=["*"],
-    )
+    # app.add_middleware(
+    #     CORSMiddleware,
+    #     allow_origins=["*"],
+    #     allow_methods=["*"],
+    #     allow_headers=["*"],
+    # )
     
     logger.info("✅ ANDROID PRODUCTION MODE - Async RAG Pipeline")
 
@@ -1445,37 +1441,30 @@ async def get_chat_history_list(request: dict):
     return {"chats": chat_sessions}
 
 # --------------------------------------------------------
-# ✅ GET MESSAGES FROM A SPECIFIC CHAT SESSION
+# ✅ GET MESSAGES FROM A SPECIFIC CHAT SESSION s
 # --------------------------------------------------------
 @app.post("/chat/history/get")
 async def get_chat_history_messages(request: dict):
-    """Get all messages for a user's chat history"""
     email = request.get("email")
-    limit = request.get("limit", 100)  # Default to 100 messages
-    session_id = request.get("session_id", 1)
+    limit = request.get("limit", 100)
+    session_id = str(request.get("session_id", 1))  # normalize to string
+
+    logger.debug(f"History API hit - email={email}, session_id={session_id}, limit={limit}")
+
     if not email:
         raise HTTPException(status_code=400, detail="Email required")
-    # If user has hidden their history, return empty response
-    try:
-        if is_history_hidden(email):
-            return {"messages": [], "count": 0}
-    except Exception:
-        pass
-    # Get messages from database
+
+    # fetch raw messages
     messages = get_messages(email, limit=limit, session_id=session_id)
-    
-    # Format messages for frontend
-    formatted_messages = []
-    for msg in messages:
-        formatted_messages.append({
-            "role": msg[0],      # role: 'user' or 'assistant'
-            "content": msg[1],   # message content
-            "timestamp": msg[2]  # timestamp
-        })
-    
+    logger.debug(f"Raw DB rows fetched: {messages}")
+
+    # format for frontend
     return {
-        "messages": formatted_messages,
-        "count": len(formatted_messages)
+        "messages": [
+            {"role": r, "content": c, "timestamp": t}
+            for r, c, t in messages
+        ],
+        "count": len(messages)
     }
 
 
@@ -1502,7 +1491,7 @@ def root():
 
 # =======================================================================
 # MAIN ENTRY POINT
-# ======================================================================
+# ====================================================================== ss
 if __name__ == "__main__":
     import uvicorn
     
@@ -1510,4 +1499,4 @@ if __name__ == "__main__":
     port = 8001 if DEPLOYMENT_MODE == "android" else 8000
     
     logger.info(f"🚀 Starting {DEPLOYMENT_MODE.upper()} server on port {port}...")
-    # uvicorn.run("src.api.s:app", host="0.0.0.0", port=port, reload=True)
+    uvicorn.run("src.api.s:app", host="0.0.0.0", port=port, reload=False)

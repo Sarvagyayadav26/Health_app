@@ -33,7 +33,7 @@
         android:text="Relief Chat"
         android:textSize="16sp"
         android:textStyle="bold"
-        android:layout_marginTop="5dp"
+        android:layout_marginTop="10dp"
         android:layout_marginStart="18dp"
         android:layout_marginEnd="6dp"
         app:layout_constraintStart_toEndOf="@id/backBtn"

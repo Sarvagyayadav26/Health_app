@@ -59,7 +59,7 @@ class ReliefChatActivity : AppCompatActivity() {
         chatsHistoryBtn.setOnClickListener { displayAllChats(email) }
         closeHistoryBtn.setOnClickListener { }
 
-        fetchRemainingChats(email)
+       // fetchRemainingChats(email)
 
         sendBtn.setOnClickListener {
             val message = inputBox.text.toString().trim()
@@ -157,6 +157,15 @@ class ReliefChatActivity : AppCompatActivity() {
                 val topicMessage = "__TOPIC_SELECTED__:$topic"
 
                 chatBox.append("\n\nYou: $topic")
+                // Optimistically decrement remaining chats and update UI immediately
+                if (currentRemainingChats > 0) {
+                    currentRemainingChats = currentRemainingChats - 1
+                } else {
+                    currentRemainingChats = 0
+                }
+                chatsBtn.text = "Chats: $currentRemainingChats"
+                buy10Btn.visibility = if (currentRemainingChats <= 0) View.VISIBLE else View.GONE
+
                 sendTopicToBackend(email, topicMessage)
 
                 // remove the vertical chips container after selection
@@ -193,10 +202,21 @@ class ReliefChatActivity : AppCompatActivity() {
                 ) {
                     val res = response.body() ?: return
                     chatBox.append("\n\nBot: ${res.reply}")
+                    // Reconcile remaining chats with authoritative value from backend if provided
+                    val authoritative = res.chats
+                    if (authoritative != null) {
+                        currentRemainingChats = authoritative
+                        chatsBtn.text = "Chats: $currentRemainingChats"
+                        buy10Btn.visibility = if (currentRemainingChats <= 0) View.VISIBLE else View.GONE
+                    }
                 }
 
                 override fun onFailure(call: Call<ChatResponse>, t: Throwable) {
                     chatBox.append("\n\nBot: Something went wrong. Try again.")
+                    // Restore optimistic decrement on failure (allow user to retry)
+                    currentRemainingChats = currentRemainingChats + 1
+                    chatsBtn.text = "Chats: $currentRemainingChats"
+                    buy10Btn.visibility = if (currentRemainingChats <= 0) View.VISIBLE else View.GONE
                 }
             })
     }

@@ -28,7 +28,7 @@ you can change it to in s.py
 uvicorn.run("src.api.s:app", host="0.0.0.0", port=port, reload=False) 
 # 3 unicorn
 keep 1 unicorn in docker only
-# 4 DB_PATH
+# 4 update DB_PATH in user_db.py
 #local
 DB_PATH = os.path.join(os.path.dirname(__file__), "user_data.db")
 #render
@@ -42,6 +42,8 @@ Max prompt tokens: ≤ 1.5k
 # 7 logger
 logger.setLevel(logging.DEBUG)  # dev
 logger.setLevel(logging.INFO)   # prod
+# 8 update versionCode in app, build.gradle.kts
+# 9 update backend path 
 
 # update response time ############################################
 .connectTimeout(30, TimeUnit.SECONDS)
@@ -94,11 +96,11 @@ sunny.kalgaon@gmail.com
 # IP of local server ##########################################################
 ipconfig
 
-.\.venv\Scripts\python.exe -m src.api.s
-
+# backend run ##########################################################
 cd backend
-.\.venv\Scripts\python.exe -m uvicorn src.api.s:app --host 0.0.0.0 --port 8001 --log-level debug
+.\.venv\Scripts\python.exe -m uvicorn src.api.s:app --host 0.0.0.0 --port 8001 --reload
 
+.\.venv\Scripts\python.exe -m uvicorn src.api.s:app --host 0.0.0.0 --port 8001
 
 
 #github
@@ -115,19 +117,25 @@ abc
 a,b,c
 
 # for production
-1.
+1. subscriptionactivity
 Change the Intent in ReliefChatActivity.kt line 72 from SubscriptionTestActivity to SubscriptionActivity
-2.
-you can change it to in s.py
+2. you can change it to in s.py
 uvicorn.run("src.api.s:app", host="0.0.0.0", port=port, reload=False) 
-3. 
-keep 1 unicorn in docker only
-4. 
-Change path
+3. keep 1 unicorn in docker only
+4. Change path
 #local
 DB_PATH = os.path.join(os.path.dirname(__file__), "user_data.db")
 #render
 DB_PATH = "/var/data/user_data.db"
+5. for less servver downtime
+Step 1 (what does NOT cost extra – detailed):
+Using Gunicorn + Uvicorn workers
+Adding a /health endpoint
+Increasing timeouts
+Loading models at startup
+Better retry handling in Android
+These are code/config changes only.
+6. uncomment assert DB_PATH at line 13
 
 #current versionCode = 21
 versionName = "sarvagya_1.4"
@@ -172,10 +180,13 @@ sleep
 tell in short
 list all messages
 
-# chat history
-overthinking
-career 
-sleep
-career 
-short
-list all
+# remove db from render 
+rm /var/data/user_data.db
+
+
+
+
+# tst
+# register
+Email: appp
+password : a

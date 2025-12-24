@@ -10,12 +10,12 @@ import java.util.concurrent.TimeUnit
 object RetrofitClient {
 //s
 //     private const val BASE_URL = "http://10.0.2.2:8001/"
-//private const val BASE_URL = "http://192.168.1.3:8001/"
-    private const val BASE_URL = "http://192.168.1.103:8001/"
+private const val BASE_URL = "http://192.168.1.3:8001/"
+//    private const val BASE_URL = "http://192.168.1.103:8001/"
 
 
-    //    private const val BASE_URL = "https://mental-health-llm.onrender.com/"
-//    private const val BASE_URL = "https://health-app-mjt7.onrender.com"
+ //       private const val BASE_URL = "https://mental-health-llm.onrender.com/"
+  //  private const val BASE_URL = "https://health-app-mjt7.onrender.com"
     private const val TAG = "RetrofitClient"
 
     // Resolve BuildConfig.DEBUG at runtime via reflection to avoid unresolved

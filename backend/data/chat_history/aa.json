@@ -98,5 +98,55 @@
     "role": "assistant",
     "content": "Hey! I’m here for you—how’s your day going? If you’d like to chat about anything, just let me know.",
     "time": "2025-12-17T07:04:15.883541"
+  },
+  {
+    "role": "user",
+    "content": "The user is experiencing anxiety or panic. Respond calmly with reassurance and grounding.",
+    "time": "2025-12-24T05:45:31.668564"
+  },
+  {
+    "role": "assistant",
+    "content": "Hey, I’m here for you.  \nWhen panic starts to rise, a quick grounding routine can help bring calm back:\n\n1. **Feel your feet on the floor** – notice the weight, the contact, the support.  \n2. **Take a slow breath** – inhale for 4 counts, hold for 2, exhale for 6.  \n3. **Name three things you can see** – a plant, a picture, a piece of furniture.  \n4. **Name two things you can touch** – the texture of your shirt, the coolness of a mug.  \n5. **Name one thing you can hear** – a distant car, your own breathing.\n\nRemember, the panic you feel is just your brain’s alarm. It’s not a reflection of reality. After you feel steadier, you can gently remind yourself that you’re safe, you’re not alone, and you have the strength to handle what comes next. If it feels like too much, talking to a trusted friend or professional can offer extra support. You’ve got this.",
+    "time": "2025-12-24T05:45:33.787700"
+  },
+  {
+    "role": "user",
+    "content": "career",
+    "time": "2025-12-24T05:46:10.067100"
+  },
+  {
+    "role": "assistant",
+    "content": "**You’re not alone—career worries are common, and there are simple steps to start easing the anxiety.**  \n\n**Practical steps to tackle career anxiety:**\n\n1. **Acknowledge the feeling**  \n   - Notice the anxiety without judging it.  \n   - Remind yourself it’s a normal reaction, not a sign of failure.\n\n2. **Break it into two parts**  \n   - **What if I succeed?** Visualize the positive outcomes and the steps that led there.  \n   - **What if I don’t?** List backup options—alternative roles, industries, or skill‑building courses that could still lead to a satisfying career.\n\n3. **Create a backup plan**  \n   - Identify at least two realistic alternatives you could pursue if your first choice doesn’t work out.  \n   - Research the basics (required skills, entry points, training resources) so you feel prepared.\n\n4. **Start with a tiny, doable task**  \n   - Pick one simple action: update your résumé, reach out to a mentor, or read an article about your field.  \n   - If it feels tough, split it into even smaller steps (e.g., write one sentence, then one more).\n\n5. **Build momentum gradually**  \n   - Celebrate each small win.  \n   - Over time, combine these wins into larger milestones.\n\n6. **Seek support**  \n   - Talk to a friend, mentor, or career counselor about your concerns.  \n   - If anxiety feels overwhelming, consider professional help—therapy or coaching can provide tailored strategies.\n\n**Remember:** Every career path has twists and turns. By preparing both a hopeful plan and a practical backup, you’re giving yourself the flexibility to move forward confidently. You’ve got the ability to shape your future—take it one small step at a time.",
+    "time": "2025-12-24T05:46:11.884916"
+  },
+  {
+    "role": "user",
+    "content": "career",
+    "time": "2025-12-24T05:46:25.852323"
+  },
+  {
+    "role": "assistant",
+    "content": "**You’re not alone—career anxiety is a natural response, and you can move forward step by step.**\n\n1. **Accept the feeling**  \n   - Anxiety is part of human evolution; it signals that something needs attention.\n\n2. **Split the situation into two parts**  \n   - **If you solve it**: picture the positive outcome and the steps that lead there.  \n   - **If you don’t solve it**: think of a realistic backup plan—there are many alternative paths you can explore.\n\n3. **Create a backup plan first**  \n   - List at least two other career options that feel doable.  \n   - Research what skills or steps you’d need to shift into those roles.\n\n4. **Start with the simplest action**  \n   - Choose one tiny, concrete task (e.g., update your résumé, set up a LinkedIn profile, or read one article about your field).  \n   - If it still feels hard, break it into even smaller pieces.\n\n5. **Build momentum**  \n   - Celebrate each small win.  \n   - Gradually tackle slightly bigger tasks as confidence grows.\n\n6. **Seek support when needed**  \n   - Talk with a friend, mentor, or counselor about your concerns.  \n   - If anxiety feels overwhelming, professional help can give you tailored strategies.\n\nTake it one tiny step at a time—you’re already on the right track by acknowledging the anxiety and planning to address it.",
+    "time": "2025-12-24T05:46:27.766908"
+  },
+  {
+    "role": "user",
+    "content": "The user is experiencing anxiety or panic. Respond calmly with reassurance and grounding.",
+    "time": "2025-12-24T05:46:33.721672"
+  },
+  {
+    "role": "assistant",
+    "content": "You’re not alone—anxiety can feel overwhelming, but a few simple steps can bring calm back.  \n\n**Grounding practice (1‑2 minutes):**  \n1. **Feel the floor** – notice the weight of your feet, the texture beneath you.  \n2. **Breathe slowly** – inhale for 4 counts, hold 2, exhale for 6.  \n3. **Name sensations** – one thing you see, one you hear, one you touch.  \n4. **Reassure yourself** – remind yourself you’re safe and you can handle this.  \n\nIf the panic feels intense, consider reaching out to a trusted friend or professional. You deserve support and peace.",
+    "time": "2025-12-24T05:46:35.121465"
+  },
+  {
+    "role": "user",
+    "content": "career",
+    "time": "2025-12-24T05:46:38.590119"
+  },
+  {
+    "role": "assistant",
+    "content": "**You’re not alone—career worries are common, and you can move forward step by step.**\n\n- **Accept the feeling** – anxiety is a natural signal that something needs attention.  \n- **Split the situation**  \n  - *If you succeed*: imagine the positive outcome and the steps that get you there.  \n  - *If it doesn’t work out*: think of realistic alternatives—there are many paths you can pivot to.  \n- **Start with a backup plan** – list at least two other career options that feel doable, and research what skills or steps you’d need for each.  \n- **Tackle the simplest task first** – pick one tiny action (e.g., update your résumé, reach out to a mentor, or read one article). If it feels hard, break it into even smaller pieces.  \n- **Build momentum** – celebrate each small win, then move to the next step.  \n- **Seek support** – talk with a friend, mentor, or counselor. If anxiety feels overwhelming, professional help can give you tailored strategies.\n\nTake it one small step at a time—you’ve already shown you can handle uncertainty by planning ahead. You’ve got this.",
+    "time": "2025-12-24T05:46:40.103181"
   }
 ]
